@@ -1,0 +1,10 @@
+[Unit]
+Description=Caddy
+
+[Service]
+ExecStart=%h/.nix-profile/bin/caddy run --config %h/ws/commut/meta/Caddyfile
+Restart=on-failure
+RestartSec=2s
+
+[Install]
+WantedBy=default.target

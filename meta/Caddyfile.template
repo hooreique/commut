@@ -1,0 +1,27 @@
+{
+  debug
+  http_port  8080
+  https_port 8443
+}
+
+http://www.example.com {
+  redir https://www.example.com{uri}
+}
+
+https://www.example.com {
+  @public path /favicon.ico /manifest.json /images/* /fonts/* /app/*
+
+  handle @public {
+    root * /path/to/commut/public
+    file_server
+  }
+
+  handle /build/* {
+    root * /path/to/commut
+    file_server
+  }
+
+  handle {
+    reverse_proxy 127.0.0.1:3000
+  }
+}

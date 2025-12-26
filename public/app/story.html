@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" sizes="any" href="/images/hono.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.json" />
+  <link href="/build/uno.css" rel="stylesheet" />
+  <title>Commut Story</title>
+</head>
+
+<body>
+  <div class="p-4 grid gap-4">
+    <h1 class="text-2xl font-bold">Story</h1>
+
+    <div>
+      <label>Private Key<br>
+        <textarea id="private-key" autocomplete="off" autocorrect="off" spellcheck="false"
+          class="px-2 py-1 rounded-sm border border-zinc-400 w-sm"></textarea>
+      </label>
+    </div>
+
+    <div>
+      <label>Passphrase<br>
+        <input id="passphrase" type="password" autocomplete="off" size="6" maxlength="6"
+          class="px-2 py-1 w-40 rounded-sm border border-zinc-400">
+      </label>
+    </div>
+
+    <div>
+      <button id="sv-btn" class="px-2 py-1 rounded-sm border border-zinc-400 cursor-pointer">Save</button>
+
+      <span id="sv-msg"></span>
+    </div>
+
+    <div>
+      <button id="cl-btn" class="px-2 py-1 rounded-sm border border-zinc-400 cursor-pointer">Clear</button>
+
+      <span id="cl-msg"></span>
+    </div>
+
+    <div>
+      <button id="dl-btn" class="px-2 py-1 rounded-sm border border-zinc-400 cursor-pointer">Delete</button>
+
+      <span id="dl-msg"></span>
+    </div>
+  </div>
+
+  <script>
+    const done = (fn, el) => Promise.resolve()
+      .then(fn)
+      .then(() => {
+        el.innerText = 'Done';
+      })
+      .then(() => new Promise(res => {
+        setTimeout(() => {
+          el.innerText = '';
+          res();
+        }, 1_000);
+      }))
+      .catch(reason => {
+        alert(reason?.message ?? 'something went wrong');
+      });
+
+    const privateKey = document.querySelector('#private-key');
+    const passphrase = document.querySelector('#passphrase');
+    const svMsg = document.querySelector('#sv-msg');
+    const clMsg = document.querySelector('#cl-msg');
+    const dlMsg = document.querySelector('#dl-msg');
+
+    const te = new TextEncoder();
+    const blandSalt = te.encode('bland-salt');
+    const blandVect = te.encode('bland-vect');
+
+    const save = () => {
+      done(() => {
+        const password = passphrase.value.trim();
+        if (!password) throw {message: 'Passphrase is empty'};
+        const pri = privateKey.value.trim();
+        if (!pri) throw {message: 'Private Key is empty'};
+        const arr = pri.split('\n');
+        arr.pop();
+        arr.shift();
+        const data = Uint8Array.fromBase64(arr.join(''));
+        if (data.length === 0) throw {message: 'data is empty'};
+        return crypto.subtle.importKey('raw', te.encode(password), 'PBKDF2', false, ['deriveKey'])
+          .then(key => crypto.subtle.deriveKey({name: 'PBKDF2', hash: 'SHA-256', salt: blandSalt, iterations: 300_000}, key, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']))
+          .then(key => crypto.subtle.encrypt({name: 'AES-GCM', iv: blandVect}, key, data))
+          .then(enc => new Uint8Array(enc).toBase64())
+          .then(encPri => localStorage.setItem('encpri', encPri))
+          .then(() => {
+            const encPri = localStorage.getItem('encpri');
+            console.info('encPri:', encPri);
+          });
+      }, svMsg);
+    };
+
+    privateKey.addEventListener('keydown', ({key, ctrlKey, altKey, shiftKey}) => {
+      if (key === 'Enter' && !ctrlKey && !altKey && !shiftKey) passphrase.focus();
+    });
+
+    passphrase.addEventListener('keydown', ({key, ctrlKey, altKey, shiftKey}) => {
+      if (key === 'Enter' && !ctrlKey && !altKey && !shiftKey) save();
+    });
+
+    document.querySelector('#sv-btn').addEventListener('click', save);
+
+    document.querySelector('#cl-btn').addEventListener('click', () => {
+      done(() => {
+        privateKey.value = '';
+        passphrase.value = '';
+      }, clMsg);
+    });
+
+    document.querySelector('#dl-btn').addEventListener('click', () => {
+      done(() => {
+        if (!confirm('Are you sure?')) throw {message: 'you were not sure'};
+        localStorage.removeItem('encpri');
+      }, dlMsg);
+    });
+  </script>
+</body>
+
+</html>

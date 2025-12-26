@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "cp-xterm-css": "mkdir -p build && cp node_modules/@xterm/xterm/css/xterm.css build/xterm.css",
+    "build-fe": "tsdown --no-clean --sourcemap --tsconfig=tsconfig.browser.json --out-dir=build src/client/app.ts",
+    "prepare": "unocss && pnpm run cp-xterm-css && pnpm run build-fe",
+    "dev": "tsdown --sourcemap --tsconfig=tsconfig.node.json src/server/main.ts --watch --on-success='node dist/main.mjs'",
+    "build": "pnpm run prepare && tsdown --sourcemap --tsconfig=tsconfig.node.json src/server/main.ts",
+    "start": "node dist/main.mjs",
+    "typecheck": "tsc --project tsconfig.browser.json && tsc --project tsconfig.node.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "1.18.2",
+    "@hono/node-ws": "1.2.0",
+    "hono": "4.9.2",
+    "node-pty": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.11.17",
+    "@unocss/cli": "66.5.10",
+    "@unocss/reset": "66.5.10",
+    "@xterm/addon-webgl": "0.18.0",
+    "@xterm/xterm": "5.5.0",
+    "tsdown": "0.18.2",
+    "unocss": "66.5.10"
+  }
+}

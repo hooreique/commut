@@ -1,0 +1,11 @@
+[Unit]
+Description=Commut
+
+[Service]
+WorkingDirectory=%h/ws/commut
+ExecStart=%h/.nix-profile/bin/nix develop --command bash -c "pnpm install --frozen-lockfile && pnpm run build && pnpm run start"
+Restart=on-failure
+RestartSec=2s
+
+[Install]
+WantedBy=default.target

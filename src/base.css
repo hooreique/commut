@@ -1,0 +1,42 @@
+@font-face {
+  font-family: 'Hack Nerd Font';
+  src: url('/fonts/HackNerdFont-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hack Nerd Font';
+  src: url('/fonts/HackNerdFont-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Hack Nerd Font';
+  src: url('/fonts/HackNerdFont-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Hack Nerd Font';
+  src: url('/fonts/HackNerdFont-BoldItalic.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
+}
+
+:root {
+  font-size: 14px;
+  font-weight: normal;
+  font-family:
+    'Hack Nerd Font',
+    Menlo,
+    Consolas,
+    'DejaVu Sans Mono',
+    monospace;
+}
+
+body {
+  background-color: #24272E;
+}

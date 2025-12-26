@@ -1,0 +1,15 @@
+{
+  "$schema": "https://www.schemastore.org/web-manifest-combined.json",
+  "name": "Commut",
+  "display": "standalone",
+  "start_url": "/app/index.html",
+  "background_color": "#24272e",
+  "theme_color": "#24272e",
+  "icons": [
+    {
+      "src": "/images/hono.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}

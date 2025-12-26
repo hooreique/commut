@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig.json",
+  "include": [
+    "src/shared",
+    "src/client",
+  ],
+  "compilerOptions": {
+    "rootDir": "src",
+    "noEmit": true,
+    "lib": [
+      "ESNext",
+      "DOM",
+    ],
+    "types": [],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+  },
+}
