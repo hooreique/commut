@@ -8,7 +8,7 @@ const vkBtn = ({ vk, emitVk, emitVkPartial }: {
   readonly emitVkPartial: (partial: VirtualKbdPartial) => void;
 }): Readonly<HTMLButtonElement> => {
   const it = document.createElement('button');
-  it.className = 'inline-block min-w-[2em] px-2 py-1 rounded border border-gray-500 cursor-pointer hover:border-gray-400' as Uno;
+  it.className = 'inline-block min-w-[2.4em] px-2 py-1 rounded border border-gray-500 cursor-pointer hover:border-gray-400' as Uno;
 
   it.addEventListener('click', () => {
     if (typeof vk.v === 'function') {
