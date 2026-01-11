@@ -1,3 +1,24 @@
+export type TtlSet = {
+  /**
+   * 요소를 추가합니다.
+   * @param str 추가할 요소
+   */
+  readonly add: (str: string) => void;
+
+  /**
+   * 요소가 있는지 조회합니다.
+   * @param str 조회할 요소
+   * @returns `true`: 있을 때, `false`: 없을 때
+   */
+  readonly has: (str: string) => boolean;
+
+  /**
+   * 요소를 지웁니다.
+   * @param str 지울 요소
+   */
+  readonly delete: (str: string) => void;
+};
+
 /**
  * TTL 이 있는 Set 을 생성합니다.
  */
@@ -44,26 +65,7 @@ export const ttlSet = (opts?: {
    * @param set self
    */
   readonly afterMiss?: (str: string, set: ReadonlySet<string>) => void;
-}): {
-  /**
-   * 요소를 추가합니다.
-   * @param str 추가할 요소
-   */
-  readonly add: (str: string) => void;
-
-  /**
-   * 요소가 있는지 조회합니다.
-   * @param str 조회할 요소
-   * @returns `true`: 있을 때, `false`: 없을 때
-   */
-  readonly has: (str: string) => boolean;
-
-  /**
-   * 요소를 지웁니다.
-   * @param str 지울 요소
-   */
-  readonly delete: (str: string) => void;
-} => {
+}): TtlSet => {
   const set = new Set<string>();
 
   return {
