@@ -1,12 +1,11 @@
 import console from 'node:console';
 import process from 'node:process';
-
 import { readFile } from 'node:fs/promises';
 import { webcrypto } from 'node:crypto';
 
+import type { Codec } from '../shared/codec.ts';
 import type { TtlSet } from './ttl-set.ts';
 import { ttlSet } from './ttl-set.ts';
-import type { Codec } from './codec.ts';
 
 
 const p2d = (p: string) => {

@@ -1,4 +1,4 @@
-import type { Codec } from './codec.ts';
+import type { Codec } from '../shared/codec.ts';
 
 
 export type Conn = {

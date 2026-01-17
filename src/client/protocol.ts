@@ -1,22 +1,18 @@
+import type { Codec } from '../shared/codec.ts';
 import type { Dimensions } from '../shared/natural-number.ts';
 import { isNaturalNumber } from '../shared/natural-number.ts';
 
-import type { Codec } from './codec.ts';
 
-
-export type Incoming =
-  | {
-    readonly lead: 0;
-    readonly data: Uint8Array<ArrayBuffer>;
-  }
-  | {
-    readonly lead: 1;
-    readonly dimensions: Dimensions;
-  }
-  | {
-    readonly lead: -1;
-    readonly v: number;
-  };
+export type Incoming = {
+  readonly lead: 0;
+  readonly data: Uint8Array<ArrayBuffer>;
+} | {
+  readonly lead: 1;
+  readonly dimensions: Dimensions;
+} | {
+  readonly lead: -1;
+  readonly v: number;
+};
 
 const td = new TextDecoder();
 const te = new TextEncoder();

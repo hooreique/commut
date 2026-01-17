@@ -18,12 +18,14 @@ export const createTicket = (
     .then(([[nonce, sig], key]) => Promise.all([
       webcrypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']),
       nonceSet.has(nonce)
-        ? webcrypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, Buffer.from(sig, 'base64'), Buffer.from(nonce, 'base64'))
+        ?
+        webcrypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, Buffer.from(sig, 'base64'), Buffer.from(nonce, 'base64'))
           .then(isValid => {
             if (isValid) nonceSet.delete(nonce);
             else throw { message: 'wrong signature' };
           })
-        : Promise.reject({ message: 'nonce not found' }),
+        :
+        Promise.reject({ message: 'nonce not found' }),
     ]))
     .then(([{ privateKey, publicKey }]) => webcrypto.subtle.exportKey('spki', publicKey).then(key => {
       const id = Buffer.from(webcrypto.getRandomValues(new Uint8Array(8))).toString('base64');

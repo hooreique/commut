@@ -1,16 +1,14 @@
 import console from 'node:console';
-
 import { webcrypto } from 'node:crypto';
 
 import { Hono } from 'hono';
 
-import type { Codec } from './codec.ts';
+import type { Codec } from '../shared/codec.ts';
 
 
 const te = new TextEncoder();
-
-const UP: Readonly<Uint8Array<ArrayBufferLike>> = te.encode('client -> server');
-const DN: Readonly<Uint8Array<ArrayBufferLike>> = te.encode('server -> client');
+const UP: Readonly<Uint8Array<ArrayBuffer>> = te.encode('client -> server');
+const DN: Readonly<Uint8Array<ArrayBuffer>> = te.encode('server -> client');
 
 export const createSalt = (
   checkpoints: Map<string, CryptoKey>,

@@ -66,7 +66,8 @@ process.on('SIGTERM', () => {
     if (err) {
       console.error(err);
       process.exit(1);
+    } else {
+      process.exit(0);
     }
-    process.exit(0);
   });
 });
