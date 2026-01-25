@@ -1,26 +1,25 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-    uno-ls = {
-      url = "github:hooreique/unocss-language-server";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "flake-utils";
-    };
+    uno-ls.url = "github:hooreique/unocss-language-server";
   };
 
-  outputs = inputs: inputs.flake-utils.lib.eachDefaultSystem (system: let
-    pkgs = inputs.nixpkgs.legacyPackages.${system} // {
-      unocss-language-server = inputs.uno-ls.packages.${system}.default;
-    };
+  outputs = inputs: let
+    eachSystem = systems: f: builtins.foldl' (attrs: system: let
+      ret = f system;
+    in builtins.foldl' (attrs: key: attrs // {
+      ${key} = (attrs.${key} or {}) // { ${system} = ret.${key}; };
+    }) attrs (builtins.attrNames ret)) {} systems;
+  in eachSystem [ "aarch64-linux" "x86_64-linux" "aarch64-darwin" ] (system: let
+    pkgs = inputs.nixpkgs.legacyPackages.${system};
   in {
     devShells.default = pkgs.mkShell {
-      buildInputs = with pkgs; [
-        nodejs_22
-        pnpm
-        typescript
-        typescript-language-server
-        unocss-language-server
+      packages = [
+        pkgs.nodejs_22
+        pkgs.pnpm
+        pkgs.typescript
+        pkgs.typescript-language-server
+        inputs.uno-ls.packages.${system}.default
       ];
     };
   });
