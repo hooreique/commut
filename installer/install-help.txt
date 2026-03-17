@@ -1,0 +1,29 @@
+commut-installer install
+
+Install or refresh a personal commut server.
+
+Usage:
+  nix run {{ installFlakeRef }} -- install [options]
+
+Required options:
+  --domain DOMAIN
+  --authorized-pubkey-file PATH
+
+Caddy options:
+  --http-port PORT                default: 80
+  --https-port PORT               default: 443
+  --debug-caddy
+
+Backend options:
+  --listen-host HOST              default: 127.0.0.1
+  --listen-port PORT              default: 3000
+
+Environment options:
+  --enable-linger
+  --config-home PATH              default: $default_config_home
+  --data-home PATH                default: $default_data_home
+  --state-home PATH               default: $default_state_home
+
+Examples:
+  nix run {{ installFlakeRef }} -- install --domain commut.example.com --authorized-pubkey-file ~/.config/commut/authorized.pub.pem
+  nix run {{ installFlakeRef }} -- install --domain commut.example.com --authorized-pubkey-file ~/.config/commut/authorized.pub.pem --http-port 8080 --https-port 8443 --debug-caddy

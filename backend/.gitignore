@@ -1,0 +1,10 @@
+/target/
+
+# Cargo build output and profiler artifacts
+**/*.rs.bk
+**/*.pdb
+
+# macOS metadata
+.DS_Store
+
+result*

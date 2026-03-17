@@ -32,4 +32,4 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Build
-        run: nix build .#client .#default .#installer
+        run: nix build .#commut-client .#commut .#commut-installer

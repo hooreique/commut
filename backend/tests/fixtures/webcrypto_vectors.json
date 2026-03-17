@@ -1,0 +1,19 @@
+{
+  "authorization_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE0/PfuRPk0dS25eRqGlouhsqi88Sr\notuYbfWj3eg4CoeiD6ewQRIMH1z1zekgZzf7yJW153yL+NikKdMnR3LBzg==\n-----END PUBLIC KEY-----\n",
+  "nonce_base64": "Zml4dHVyZSBub25jZSAwMQ==",
+  "nonce_signature_base64": "zlXvfa/zPavPFw9lQxVuRMLwCQYjQShcbqmKqa3/g860SCx/VYt7YpFxAaiSaBUtA9G+mHCeCwP0qEhFytI7cg==",
+  "id_base64": "Zml4dHVyZSBzZXNzaW9uIGlkIDAx",
+  "id_signature_base64": "V5ynCY33n04w4PNnAb9QQ6BpatWvn8oPyhC/osEFoFQe03iCyuaiANYYlKkh2xNhWdsLqydyzs9RGzL/LKxCoQ==",
+  "server_ecdh_private_key_pkcs8_base64": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgm3qcwlh7jV/p21nRvw11vqOn5EEHCzZKPn+vm73QxyGhRANCAAShjRFpigtpuEYzSEBKvuaNxRygqWpNP0G1LkS65khkGb4DyiRXkp8H3lupqSEcUo7r5TMo+flcStNvQOYEn6p6",
+  "server_ecdh_public_key_spki_base64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoY0RaYoLabhGM0hASr7mjcUcoKlqTT9BtS5EuuZIZBm+A8okV5KfB95bqakhHFKO6+UzKPn5XErTb0DmBJ+qeg==",
+  "client_ecdh_public_key_spki_base64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1N7Gc9pUZOazHtU9W1H2DjUrQ/o7FpgvItFC0UmOITT0SEPDuOKRSfBXw0HI+Uo3+anfP586SXvX6s+QHjULRw==",
+  "salt_base64": "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=",
+  "expected_client_to_server_key_base64": "fEr+4ToKS3gngt4l6NXYFg==",
+  "expected_server_to_client_key_base64": "Q8RaNfpEdzjvpI38BuR7DA==",
+  "client_to_server_iv_base64": "AAECAwQFBgcICQoL",
+  "client_to_server_plaintext_base64": "cHJpbnRmICJmaXh0dXJlLXVwXG4iDQ==",
+  "client_to_server_ciphertext_base64": "L72xFMF7b3fe/bcWOAN/D1JH2KWCwBaP1ioOYjSL2/pENknPWpQ=",
+  "server_to_client_iv_base64": "CwoJCAcGBQQDAgEA",
+  "server_to_client_plaintext_base64": "Zml4dHVyZS1kb3duIG91dHB1dAo=",
+  "server_to_client_ciphertext_base64": "P+C8UdpPZ9n9I7N4nftfros01eunnkPUS/pvi50W7LZqa7es"
+}

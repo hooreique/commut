@@ -1,0 +1,16 @@
+commut-installer
+
+Install or remove a personal commut server.
+
+Subcommands:
+  install
+  uninstall
+
+Examples:
+  nix run {{ installFlakeRef }} -- install --domain commut.example.com --authorized-pubkey-file ~/.config/commut/authorized.pub.pem
+  nix run {{ installFlakeRef }} -- install --domain commut.example.com --authorized-pubkey-file ~/.config/commut/authorized.pub.pem --http-port 8080 --https-port 8443 --debug-caddy
+  nix run {{ installFlakeRef }} -- uninstall
+
+More help:
+  nix run {{ installFlakeRef }} -- install --help
+  nix run {{ installFlakeRef }} -- uninstall --help

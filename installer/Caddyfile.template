@@ -1,0 +1,35 @@
+{
+  $debug_line
+  http_port  $caddy_http_port
+  https_port $caddy_https_port
+}
+
+http://$domain {
+  redir https://$domain{uri}
+}
+
+https://$domain {
+  @public path /favicon.ico /manifest.json /images/* /fonts/* /app/*
+
+  handle @public {
+    root * {{ clientPublicRoot }}
+    file_server
+  }
+
+  handle /build/* {
+    root * {{ clientRoot }}
+    file_server
+  }
+
+  handle /api/* {
+    reverse_proxy $listen_host:$listen_port
+  }
+
+  handle /sockets/* {
+    reverse_proxy $listen_host:$listen_port
+  }
+
+  handle {
+    respond "404 Not Found" 404
+  }
+}
