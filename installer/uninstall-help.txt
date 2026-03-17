@@ -1,0 +1,15 @@
+commut-installer uninstall
+
+Remove installer-managed commut files and user services.
+
+Usage:
+  nix run {{ installFlakeRef }} -- uninstall [options]
+
+Options:
+  --config-home PATH              default: $default_config_home
+  --data-home PATH                default: $default_data_home
+  --state-home PATH               default: $default_state_home
+  --disable-linger
+
+Example:
+  nix run {{ installFlakeRef }} -- uninstall

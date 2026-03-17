@@ -1,0 +1,14 @@
+{
+  "initial_dimensions": "100,30",
+  "ordered_markers": [
+    "__COMMUT_E2E_ONE__",
+    "__COMMUT_E2E_TWO__",
+    "__COMMUT_E2E_THREE__"
+  ],
+  "commands": [
+    "printf '__COMMUT_E2E_ONE__\\n'\r",
+    "printf '__COMMUT_E2E_TWO__\\n'\r",
+    "printf '__COMMUT_E2E_THREE__\\n'\r"
+  ],
+  "exit_command": "exit\r"
+}
