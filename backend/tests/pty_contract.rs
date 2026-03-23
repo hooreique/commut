@@ -17,7 +17,7 @@ use common::spawn_harness;
 async fn spawned_shell_observes_the_required_working_directory_and_environment() -> Result<()> {
     // Spec coverage:
     // - section 10.1: the PTY shell starts in `$HOME`
-    // - section 10.1: PATH must be `$HOME/.nix-profile/bin:/usr/bin`
+    // - section 10.1: the PTY shell is launched as a login shell
     // - section 10.1: TERM must be `xterm-256color`
     // - section 10.1: COLORTERM must be `truecolor`
     // - section 10.1: NODE_PTY must be `1`
@@ -36,7 +36,7 @@ async fn spawned_shell_observes_the_required_working_directory_and_environment()
         .await?;
 
     ws.send_encrypted_pty_input(
-        b"printf 'COMMUT_PWD=%s\\nCOMMUT_TERM=%s\\nCOMMUT_COLORTERM=%s\\nCOMMUT_NODE_PTY=%s\\n' \"$PWD\" \"$TERM\" \"$COLORTERM\" \"$NODE_PTY\"; case \"$PATH\" in *\"$HOME/.nix-profile/bin:/usr/bin\"*) echo COMMUT_PATH_OK;; *) echo COMMUT_PATH_BAD:$PATH;; esac\r",
+        b"printf 'COMMUT_PWD=%s\\nCOMMUT_TERM=%s\\nCOMMUT_COLORTERM=%s\\nCOMMUT_NODE_PTY=%s\\n' \"$PWD\" \"$TERM\" \"$COLORTERM\" \"$NODE_PTY\"; if [[ -o login ]]; then echo COMMUT_LOGIN_SHELL=1; else echo COMMUT_LOGIN_SHELL=0; fi\r",
     )
     .await?;
 
@@ -47,7 +47,7 @@ async fn spawned_shell_observes_the_required_working_directory_and_environment()
                 "COMMUT_TERM=xterm-256color",
                 "COMMUT_COLORTERM=truecolor",
                 "COMMUT_NODE_PTY=1",
-                "COMMUT_PATH_OK",
+                "COMMUT_LOGIN_SHELL=1",
             ],
             Duration::from_secs(5),
         )
@@ -70,8 +70,8 @@ async fn spawned_shell_observes_the_required_working_directory_and_environment()
         "spawned shell should observe NODE_PTY=1, got transcript: {transcript:?}"
     );
     assert!(
-        transcript.contains("COMMUT_PATH_OK"),
-        "spawned shell should preserve the required PATH segment, got transcript: {transcript:?}"
+        transcript.contains("COMMUT_LOGIN_SHELL=1"),
+        "spawned shell should run as a login shell, got transcript: {transcript:?}"
     );
 
     ws.close_normally().await?;

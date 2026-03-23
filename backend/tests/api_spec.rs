@@ -5,11 +5,12 @@ mod common;
 use anyhow::Result;
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use commut_rust_spec_tests::support::TestHarness;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use common::{base64_of_zeroes, spawn_harness, spawn_harness_with_static_assets};
+use common::spawn_harness;
 
 fn repo_root() -> &'static Path {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -23,6 +24,17 @@ fn unique_temp_dir(name: &str) -> PathBuf {
         .expect("wall clock should be after unix epoch")
         .as_nanos();
     std::env::temp_dir().join(format!("commut-{name}-{unique}"))
+}
+
+fn base64_of_zeroes(len: usize) -> String {
+    BASE64_STANDARD.encode(vec![0_u8; len])
+}
+
+async fn spawn_harness_with_static_assets(
+    public_dir: PathBuf,
+    build_dir: PathBuf,
+) -> Result<TestHarness> {
+    TestHarness::spawn_with_static_assets(public_dir, build_dir).await
 }
 
 #[tokio::test]
@@ -69,7 +81,9 @@ async fn static_manifest_and_build_assets_are_served_from_their_specified_roots(
     assert_eq!(build_body, fs::read_to_string(build_dir.join("app.mjs"))?);
 
     harness.shutdown().await?;
-    let _ = fs::remove_dir_all(root);
+    if let Err(error) = fs::remove_dir_all(root) {
+        eprintln!("[api_spec] failed to remove temp static-assets dir: {error}");
+    }
     Ok(())
 }
 
@@ -103,7 +117,7 @@ async fn nonce_endpoint_returns_base64_and_stores_it() -> Result<()> {
     BASE64_STANDARD.decode(nonce.as_bytes())?;
 
     let signature = harness.sign_authorized_base64_value(&nonce)?;
-    let _ticket = harness.exchange_ticket(&nonce, &signature).await?;
+    harness.exchange_ticket(&nonce, &signature).await?;
 
     harness.shutdown().await
 }
@@ -163,7 +177,7 @@ async fn successful_ticket_exchange_consumes_the_nonce_exactly_once() -> Result<
     let nonce = harness.issue_nonce().await?;
     let signature = harness.sign_authorized_base64_value(&nonce)?;
 
-    let _first = harness.exchange_ticket(&nonce, &signature).await?;
+    harness.exchange_ticket(&nonce, &signature).await?;
     let (status, body) = harness
         .exchange_ticket_raw(&format!("{nonce}.{signature}"))
         .await?;

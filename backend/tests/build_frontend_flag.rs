@@ -84,8 +84,12 @@ async fn debug_run_builds_and_serves_client_assets_by_default() -> Result<()> {
     }
 
     if child.try_wait()?.is_none() {
-        let _ = child.kill();
-        let _ = child.wait();
+        if let Err(error) = child.kill() {
+            eprintln!("[build_frontend_flag] failed to kill child process: {error}");
+        }
+        if let Err(error) = child.wait() {
+            eprintln!("[build_frontend_flag] failed to wait for child process: {error}");
+        }
     }
 
     Ok(())

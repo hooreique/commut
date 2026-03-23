@@ -282,8 +282,12 @@ mod tests {
         .expect("default file should be loaded");
 
         assert_eq!(pem, "PEM_FROM_DEFAULT_FILE");
-        let _ = fs::remove_file(&key_path);
-        let _ = fs::remove_dir_all(home);
+        if let Err(error) = fs::remove_file(&key_path) {
+            eprintln!("[runtime test] failed to remove key file: {error}");
+        }
+        if let Err(error) = fs::remove_dir_all(home) {
+            eprintln!("[runtime test] failed to remove temp home dir: {error}");
+        }
     }
 
     #[test]
@@ -311,8 +315,7 @@ mod tests {
         let target = temp.join("store-output");
         fs::create_dir_all(&target).expect("target dir should exist");
 
-        let resolved =
-            build_frontend_assets_with(Path::new("/tmp"), &out_link, |_cwd, out_link| {
+        let resolved = build_frontend_assets_with(Path::new("/tmp"), &out_link, |_, out_link| {
                 #[cfg(unix)]
                 std::os::unix::fs::symlink(&target, out_link).map_err(anyhow::Error::from)?;
                 #[cfg(windows)]
@@ -326,8 +329,12 @@ mod tests {
             resolved,
             fs::canonicalize(&target).expect("canonical target")
         );
-        let _ = fs::remove_file(&out_link);
-        let _ = fs::remove_dir_all(&temp);
+        if let Err(error) = fs::remove_file(&out_link) {
+            eprintln!("[runtime test] failed to remove out link: {error}");
+        }
+        if let Err(error) = fs::remove_dir_all(&temp) {
+            eprintln!("[runtime test] failed to remove temp dir: {error}");
+        }
     }
 
     #[test]

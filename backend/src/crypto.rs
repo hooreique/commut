@@ -194,8 +194,7 @@ mod tests {
         let server_pub_der = BASE64_STANDARD
             .decode(checkpoint.server_ephemeral_public_key_base64.as_bytes())
             .expect("server public key der");
-        let _server_pub =
-            PublicKey::from_public_key_der(&server_pub_der).expect("valid server public key");
+        PublicKey::from_public_key_der(&server_pub_der).expect("valid server public key");
 
         let client_secret = SecretKey::from_slice(&[5_u8; 32]).expect("client secret");
         let client_pub = BASE64_STANDARD.encode(

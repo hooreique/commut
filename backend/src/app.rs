@@ -128,7 +128,9 @@ async fn shutdown_signal() {
 
     #[cfg(not(unix))]
     {
-        let _ = tokio::signal::ctrl_c().await;
+        if let Err(error) = tokio::signal::ctrl_c().await {
+            eprintln!("[signal] failed to wait for ctrl-c: {error}");
+        }
     }
 }
 

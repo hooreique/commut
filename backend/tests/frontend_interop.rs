@@ -27,6 +27,7 @@ const PROTOCOL_TS: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/../frontend/src/protocol.ts"
 ));
+const ROUTES_RS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/routes.rs"));
 
 #[test]
 fn frontend_source_constants_match_the_rust_contract() {
@@ -75,6 +76,25 @@ fn frontend_source_constants_match_the_rust_contract() {
         "frontend resize writer must continue to use lead byte 1"
     );
     assert_eq!(WS_TYPE_RESIZE, 1);
+}
+
+#[test]
+fn backend_socket_input_path_does_not_rewrite_terminal_bytes_or_intercept_exit() {
+    // Backend coverage:
+    // - decrypted PTY input must be forwarded to the PTY without CR/LF rewriting
+    // - the WebSocket layer must not special-case `exit`
+    assert!(
+        !ROUTES_RS.contains("normalize_terminal_input"),
+        "backend socket input path must not normalize carriage returns before PTY write"
+    );
+    assert!(
+        !ROUTES_RS.contains("is_exit_command"),
+        "backend socket input path must not intercept `exit` before the PTY sees it"
+    );
+    assert!(
+        ROUTES_RS.contains("pty.write(&decrypted).await"),
+        "backend socket input path should write decrypted PTY bytes directly"
+    );
 }
 
 #[tokio::test]

@@ -189,8 +189,7 @@ async fn get_socket(
     let token = query
         .token
         .ok_or_else(|| AppError::bad_request("token is required"))?;
-    let _session = deps
-        .state
+    deps.state
         .crypt(&id)
         .await
         .ok_or_else(|| AppError::internal("socket not found"))?;
@@ -231,7 +230,7 @@ async fn handle_socket(
     })
     .await
     else {
-        let _ = socket.close().await;
+        log_socket_close_failure("spawn failure", socket.close().await);
         return;
     };
     let mut exit_rx = pty.exit_receiver();
@@ -243,7 +242,7 @@ async fn handle_socket(
 
             message_result = socket.recv() => {
                 let Some(Ok(message)) = message_result else {
-                    let _ = pty.kill().await;
+                    log_pty_kill_failure("socket receive ended", pty.kill().await);
                     break;
                 };
 
@@ -277,7 +276,7 @@ async fn handle_client_message(
         Message::Text(_) | Message::Pong(_) => true,
         Message::Ping(payload) => {
             if socket.send(Message::Pong(payload)).await.is_err() {
-                let _ = pty.kill().await;
+                log_pty_kill_failure("pong send failure", pty.kill().await);
                 return false;
             }
 
@@ -299,7 +298,7 @@ async fn handle_binary_message(
         Ok(crate::contract::WsFrame::PtyData {
             iv,
             ciphertext_and_tag,
-        }) => handle_pty_data_message(socket, pty, crypt, &iv, ciphertext_and_tag).await,
+        }) => handle_pty_data_message(pty, crypt, &iv, ciphertext_and_tag).await,
         Ok(crate::contract::WsFrame::Unknown { .. }) | Err(_) => true,
     }
 }
@@ -312,7 +311,7 @@ async fn handle_resize_message(
     if pty.resize(dimensions).await.is_ok() {
         let echoed = build_resize_payload(dimensions);
         if socket.send(Message::Binary(echoed.into())).await.is_err() {
-            let _ = pty.kill().await;
+            log_pty_kill_failure("resize echo send failure", pty.kill().await);
             return false;
         }
     }
@@ -321,7 +320,6 @@ async fn handle_resize_message(
 }
 
 async fn handle_pty_data_message(
-    socket: &mut WebSocket,
     pty: &mut crate::pty::PtyHandle,
     crypt: &crate::state::SessionCrypto,
     iv: &[u8; 12],
@@ -330,20 +328,9 @@ async fn handle_pty_data_message(
     let Ok(decrypted) = crypt.decrypt(iv, ciphertext_and_tag) else {
         return true;
     };
-    let plaintext = normalize_terminal_input(&decrypted);
-    if is_exit_command(&plaintext) {
-        let _ = pty.kill().await;
-        let _ = socket
-            .send(Message::Close(Some(CloseFrame {
-                code: WS_CLOSE_PTY_EXIT,
-                reason: Utf8Bytes::from_static(r#"{"exitCode":0,"signal":null}"#),
-            })))
-            .await;
-        return false;
-    }
 
-    if pty.write(&plaintext).await.is_err() {
-        let _ = pty.kill().await;
+    if pty.write(&decrypted).await.is_err() {
+        log_pty_kill_failure("pty write failure", pty.kill().await);
         return false;
     }
 
@@ -358,13 +345,13 @@ async fn handle_close_message(
     if let Some(close) = close
         && close.code == WS_CLOSE_NORMAL
     {
-        let _ = pty.kill().await;
-        let _ = socket.close().await;
+        log_pty_kill_failure("client normal close", pty.kill().await);
+        log_socket_close_failure("client normal close", socket.close().await);
         return false;
     }
 
-    let _ = pty.kill().await;
-    let _ = socket.close().await;
+    log_pty_kill_failure("client close", pty.kill().await);
+    log_socket_close_failure("client close", socket.close().await);
     false
 }
 
@@ -382,7 +369,7 @@ async fn forward_pty_output(
 
     let iv = rand::random::<[u8; 12]>();
     let Ok(ciphertext_and_tag) = crypt.encrypt(&iv, &output) else {
-        let _ = pty.kill().await;
+        log_pty_kill_failure("pty output encrypt failure", pty.kill().await);
         return false;
     };
     let mut payload = Vec::with_capacity(13 + output.len());
@@ -391,7 +378,7 @@ async fn forward_pty_output(
     payload.extend_from_slice(&ciphertext_and_tag);
 
     if socket.send(Message::Binary(payload.into())).await.is_err() {
-        let _ = pty.kill().await;
+        log_pty_kill_failure("pty output send failure", pty.kill().await);
         return false;
     }
 
@@ -412,31 +399,38 @@ async fn forward_pty_exit(
     };
     let reason_json = serde_json::to_string(&reason)
         .unwrap_or_else(|_| r#"{"exitCode":null,"signal":null}"#.to_owned());
-    let _ = socket
-        .send(Message::Close(Some(CloseFrame {
-            code: WS_CLOSE_PTY_EXIT,
-            reason: Utf8Bytes::from(reason_json),
-        })))
-        .await;
+    log_socket_send_close_failure(
+        "pty exit",
+        socket
+            .send(Message::Close(Some(CloseFrame {
+                code: WS_CLOSE_PTY_EXIT,
+                reason: Utf8Bytes::from(reason_json),
+            })))
+            .await,
+    );
     false
 }
 
-/// Normalize client terminal input before writing it to the PTY.
-///
-/// The current wire behavior converts carriage returns to newlines so browser
-/// enter key handling maps cleanly onto the shell process.
-fn normalize_terminal_input(input: &[u8]) -> Vec<u8> {
-    input
-        .iter()
-        .map(|byte| if *byte == b'\r' { b'\n' } else { *byte })
-        .collect()
+fn log_pty_kill_failure(context: &str, result: anyhow::Result<()>) {
+    if let Err(error) = result {
+        eprintln!("[routes] failed to kill PTY after {context}: {error}");
+    }
 }
 
-/// Detect the special `exit` command handled directly by the WebSocket layer.
-///
-/// If the decrypted client input is `exit` after trimming a trailing newline
-/// and ASCII surrounding whitespace, the server terminates the PTY and closes
-/// the socket with code `4001`.
-fn is_exit_command(input: &[u8]) -> bool {
-    input.strip_suffix(b"\n").unwrap_or(input).trim_ascii() == b"exit"
+fn log_socket_close_failure(
+    context: &str,
+    result: Result<(), axum::Error>,
+) {
+    if let Err(error) = result {
+        eprintln!("[routes] failed to close socket after {context}: {error}");
+    }
+}
+
+fn log_socket_send_close_failure(
+    context: &str,
+    result: Result<(), axum::Error>,
+) {
+    if let Err(error) = result {
+        eprintln!("[routes] failed to send close frame after {context}: {error}");
+    }
 }

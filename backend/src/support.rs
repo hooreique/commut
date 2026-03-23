@@ -163,10 +163,14 @@ impl TestHarness {
         let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
 
         let server = axum::serve(listener, app).with_graceful_shutdown(async move {
-            let _ = shutdown_rx.await;
+            if shutdown_rx.await.is_err() {
+                eprintln!("[support] graceful shutdown channel dropped before signal");
+            }
         });
         let server_task = tokio::spawn(async move {
-            let _ = server.await;
+            if let Err(error) = server.await {
+                eprintln!("[support] server task exited with error: {error}");
+            }
         });
 
         Ok(Self {
@@ -198,8 +202,10 @@ impl TestHarness {
             .lock()
             .map_err(|_| anyhow!("poisoned shutdown mutex"))?
             .take();
-        if let Some(tx) = shutdown_tx {
-            let _ = tx.send(());
+        if let Some(tx) = shutdown_tx
+            && tx.send(()).is_err()
+        {
+            eprintln!("[support] shutdown signal could not be delivered");
         }
 
         let server_task = self
@@ -207,8 +213,10 @@ impl TestHarness {
             .lock()
             .map_err(|_| anyhow!("poisoned server task mutex"))?
             .take();
-        if let Some(task) = server_task {
-            let _ = task.await;
+        if let Some(task) = server_task
+            && let Err(error) = task.await
+        {
+            eprintln!("[support] server task join failed: {error}");
         }
         Ok(())
     }
@@ -522,11 +530,9 @@ impl TestWebSocket {
                             let mut iv = [0_u8; 12];
                             iv.copy_from_slice(&payload_vec[1..13]);
                             let ciphertext_and_tag = payload_vec[13..].to_vec();
-                            let _plaintext = if let Some(session_crypto) = &self.session_crypto {
-                                session_crypto.decrypt(&iv, &ciphertext_and_tag)?
-                            } else {
-                                ciphertext_and_tag.clone()
-                            };
+                            if let Some(session_crypto) = &self.session_crypto {
+                                session_crypto.decrypt(&iv, &ciphertext_and_tag)?;
+                            }
                             return Ok(WsAppMessage::PtyData {
                                 iv,
                                 ciphertext_and_tag,

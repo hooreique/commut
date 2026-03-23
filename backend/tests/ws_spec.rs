@@ -80,12 +80,12 @@ async fn invalid_or_missing_initial_dimensions_fall_back_to_100_by_30() -> Resul
     let harness = spawn_harness().await?;
     let session = harness.establish_handshake().await?;
 
-    let _ws_missing = harness
+    harness
         .connect_ws(&session.id, Some(&session.ws_token_base64), None)
         .await?;
 
     let second_session = harness.establish_handshake().await?;
-    let _ws_invalid = harness
+    harness
         .connect_ws(
             &second_session.id,
             Some(&second_session.ws_token_base64),

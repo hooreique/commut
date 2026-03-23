@@ -39,6 +39,7 @@ pub struct PtySpec {
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ShellLaunchSpec {
     executable: PathBuf,
+    args: Vec<String>,
     cwd: PathBuf,
     env: BTreeMap<String, String>,
 }
@@ -169,6 +170,7 @@ fn spawn_pty_blocking(spec: &PtySpec) -> Result<PtyHandle> {
             .to_str()
             .ok_or_else(|| anyhow!("shell path must be valid UTF-8"))?,
     );
+    command.args(&launch.args);
     command.cwd(
         launch
             .cwd
@@ -219,6 +221,9 @@ fn spawn_pty_blocking(spec: &PtySpec) -> Result<PtyHandle> {
                     signal: None,
                 },
             );
+            // The socket task may already have torn the session down and dropped
+            // its watch receiver by the time the child exit is observed.
+            // That makes the publish a no-op rather than an actionable error.
             let _ = exit_tx.send(Some(reason));
         })
         .context("failed to spawn PTY wait thread")?;
@@ -281,10 +286,6 @@ where
 
     let executable = resolve_shell_path_with(&home, &exists)?;
     let mut launch_env = BTreeMap::new();
-    launch_env.insert(
-        "PATH".to_owned(),
-        format!("{}:/usr/bin", home.join(".nix-profile/bin").display()),
-    );
     launch_env.insert("TERM".to_owned(), "xterm-256color".to_owned());
     launch_env.insert("COLORTERM".to_owned(), "truecolor".to_owned());
     launch_env.insert("NODE_PTY".to_owned(), "1".to_owned());
@@ -311,6 +312,7 @@ where
 
     Ok(ShellLaunchSpec {
         executable,
+        args: vec!["-l".to_owned()],
         cwd: home,
         env: launch_env,
     })
@@ -377,7 +379,7 @@ mod tests {
 
     #[test]
     fn shell_resolution_requires_the_typescript_compatibility_target_exactly() {
-        let error = resolve_shell_path_with(std::path::Path::new("/home/tester"), &|_path| false)
+        let error = resolve_shell_path_with(std::path::Path::new("/home/tester"), &|_| false)
             .expect_err("missing strict shell target must fail");
 
         assert!(
@@ -406,11 +408,8 @@ mod tests {
             launch.executable,
             PathBuf::from("/home/tester/.nix-profile/bin/zsh")
         );
+        assert_eq!(launch.args, vec!["-l".to_owned()]);
         assert_eq!(launch.cwd, PathBuf::from("/home/tester"));
-        assert_eq!(
-            launch.env.get("PATH"),
-            Some(&"/home/tester/.nix-profile/bin:/usr/bin".to_owned())
-        );
         assert_eq!(launch.env.get("TERM"), Some(&"xterm-256color".to_owned()));
         assert_eq!(launch.env.get("COLORTERM"), Some(&"truecolor".to_owned()));
         assert_eq!(launch.env.get("NODE_PTY"), Some(&"1".to_owned()));
@@ -429,7 +428,7 @@ mod tests {
     fn shell_launch_spec_requires_home() {
         let env = env_map(&[]);
 
-        let error = shell_launch_spec_with(|name| env.get(name).map(PathBuf::from), |_path| true)
+        let error = shell_launch_spec_with(|name| env.get(name).map(PathBuf::from), |_| true)
             .expect_err("missing HOME must fail");
 
         assert!(error.to_string().contains("$HOME cannot be empty"));
