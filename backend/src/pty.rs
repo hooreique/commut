@@ -288,7 +288,7 @@ where
     let mut launch_env = BTreeMap::new();
     launch_env.insert("TERM".to_owned(), "xterm-256color".to_owned());
     launch_env.insert("COLORTERM".to_owned(), "truecolor".to_owned());
-    launch_env.insert("NODE_PTY".to_owned(), "1".to_owned());
+    launch_env.insert("COMMUT".to_owned(), "1".to_owned());
 
     if let Some(user) = get_env("USER").filter(|value| !value.as_os_str().is_empty()) {
         launch_env.insert("USER".to_owned(), user.to_string_lossy().into_owned());
@@ -412,7 +412,7 @@ mod tests {
         assert_eq!(launch.cwd, PathBuf::from("/home/tester"));
         assert_eq!(launch.env.get("TERM"), Some(&"xterm-256color".to_owned()));
         assert_eq!(launch.env.get("COLORTERM"), Some(&"truecolor".to_owned()));
-        assert_eq!(launch.env.get("NODE_PTY"), Some(&"1".to_owned()));
+        assert_eq!(launch.env.get("COMMUT"), Some(&"1".to_owned()));
         assert_eq!(launch.env.get("USER"), Some(&"tester".to_owned()));
         assert_eq!(
             launch.env.get("XDG_RUNTIME_DIR"),

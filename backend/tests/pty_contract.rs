@@ -20,7 +20,7 @@ async fn spawned_shell_observes_the_required_working_directory_and_environment()
     // - section 10.1: the PTY shell is launched as a login shell
     // - section 10.1: TERM must be `xterm-256color`
     // - section 10.1: COLORTERM must be `truecolor`
-    // - section 10.1: NODE_PTY must be `1`
+    // - section 10.1: COMMUT must be `1`
     //
     // Why this exists:
     // Pure unit tests already pin the launch helper logic, but this test proves
@@ -36,7 +36,7 @@ async fn spawned_shell_observes_the_required_working_directory_and_environment()
         .await?;
 
     ws.send_encrypted_pty_input(
-        b"printf 'COMMUT_PWD=%s\\nCOMMUT_TERM=%s\\nCOMMUT_COLORTERM=%s\\nCOMMUT_NODE_PTY=%s\\n' \"$PWD\" \"$TERM\" \"$COLORTERM\" \"$NODE_PTY\"; if [[ -o login ]]; then echo COMMUT_LOGIN_SHELL=1; else echo COMMUT_LOGIN_SHELL=0; fi\r",
+        b"printf 'COMMUT_PWD=%s\\nCOMMUT_TERM=%s\\nCOMMUT_COLORTERM=%s\\nCOMMUT=%s\\n' \"$PWD\" \"$TERM\" \"$COLORTERM\" \"$COMMUT\"; if [[ -o login ]]; then echo COMMUT_LOGIN_SHELL=1; else echo COMMUT_LOGIN_SHELL=0; fi\r",
     )
     .await?;
 
@@ -46,7 +46,7 @@ async fn spawned_shell_observes_the_required_working_directory_and_environment()
                 expected_pwd_marker.as_str(),
                 "COMMUT_TERM=xterm-256color",
                 "COMMUT_COLORTERM=truecolor",
-                "COMMUT_NODE_PTY=1",
+                "COMMUT=1",
                 "COMMUT_LOGIN_SHELL=1",
             ],
             Duration::from_secs(5),
@@ -66,8 +66,8 @@ async fn spawned_shell_observes_the_required_working_directory_and_environment()
         "spawned shell should observe COLORTERM=truecolor, got transcript: {transcript:?}"
     );
     assert!(
-        transcript.contains("COMMUT_NODE_PTY=1"),
-        "spawned shell should observe NODE_PTY=1, got transcript: {transcript:?}"
+        transcript.contains("COMMUT=1"),
+        "spawned shell should observe COMMUT=1, got transcript: {transcript:?}"
     );
     assert!(
         transcript.contains("COMMUT_LOGIN_SHELL=1"),

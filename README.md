@@ -58,5 +58,6 @@ Then open `https://your-domain.example.com/` and connect from the main app.
 
 - The installer expects an authorized public key file and will fail if it does not exist.
 - The default public key location used by commut is `~/.config/commut/authorized.pub.pem`.
+- commut sets `COMMUT=1` inside hosted terminal sessions. Check this variable when a shell or editor needs to detect that it is running under commut.
 - If you need installer options, run `nix run github:hooreique/commut#commut-installer -- install --help`.
 - To remove an installation, run `nix run github:hooreique/commut#commut-installer -- uninstall`.
