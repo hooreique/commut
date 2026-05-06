@@ -52,7 +52,7 @@ Open `https://your-domain.example.com/app/story.html`.
 
 That page is the browser-side key setup entrypoint. Paste the contents of `authorized.pri.pem`, choose a short passphrase, and save it.
 
-Then open `https://your-domain.example.com/` and connect from the main app.
+Then open `https://your-domain.example.com/app/index.html` and connect from the main app.
 
 ## Notes
 
