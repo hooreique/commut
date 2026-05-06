@@ -316,14 +316,13 @@ mod tests {
         fs::create_dir_all(&target).expect("target dir should exist");
 
         let resolved = build_frontend_assets_with(Path::new("/tmp"), &out_link, |_, out_link| {
-                #[cfg(unix)]
-                std::os::unix::fs::symlink(&target, out_link).map_err(anyhow::Error::from)?;
-                #[cfg(windows)]
-                std::os::windows::fs::symlink_dir(&target, out_link)
-                    .map_err(anyhow::Error::from)?;
-                Ok(())
-            })
-            .expect("out link should resolve");
+            #[cfg(unix)]
+            std::os::unix::fs::symlink(&target, out_link).map_err(anyhow::Error::from)?;
+            #[cfg(windows)]
+            std::os::windows::fs::symlink_dir(&target, out_link).map_err(anyhow::Error::from)?;
+            Ok(())
+        })
+        .expect("out link should resolve");
 
         assert_eq!(
             resolved,

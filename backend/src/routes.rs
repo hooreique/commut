@@ -417,19 +417,13 @@ fn log_pty_kill_failure(context: &str, result: anyhow::Result<()>) {
     }
 }
 
-fn log_socket_close_failure(
-    context: &str,
-    result: Result<(), axum::Error>,
-) {
+fn log_socket_close_failure(context: &str, result: Result<(), axum::Error>) {
     if let Err(error) = result {
         eprintln!("[routes] failed to close socket after {context}: {error}");
     }
 }
 
-fn log_socket_send_close_failure(
-    context: &str,
-    result: Result<(), axum::Error>,
-) {
+fn log_socket_send_close_failure(context: &str, result: Result<(), axum::Error>) {
     if let Err(error) = result {
         eprintln!("[routes] failed to send close frame after {context}: {error}");
     }
