@@ -79,6 +79,12 @@ export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
 
   const dialogEl = document.createElement('dialog');
   dialogEl.className = 'p-0 size-fit rounded border-none bg-[#424B5B] z-20 text-inherit' as Uno;
+  dialogEl.addEventListener('close', ev => {
+    (ev.currentTarget as HTMLDialogElement).querySelectorAll('input').forEach(el => {
+      el.value = '';
+    });
+    (ev.currentTarget as HTMLDialogElement).replaceChildren();
+  });
 
   onConnBtnClick(() => {
     const connModalEl = document.createElement('div');
