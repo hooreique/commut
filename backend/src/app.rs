@@ -21,7 +21,8 @@ pub struct AppConfig {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StaticAssetRoots {
     pub public_dir: PathBuf,
-    pub build_dir: PathBuf,
+    pub pages_dir: PathBuf,
+    pub dist_dir: PathBuf,
 }
 
 impl StaticAssetRoots {
@@ -40,19 +41,25 @@ impl StaticAssetRoots {
 
         Self {
             public_dir: repo_root.join("frontend/public"),
-            build_dir: repo_root.join("frontend/build"),
+            pages_dir: repo_root.join("frontend/build"),
+            dist_dir: repo_root.join("frontend/dist"),
         }
     }
 
     /// Build static asset roots from explicit overrides plus repository
     /// defaults.
     #[must_use]
-    pub fn with_overrides(public_dir: Option<PathBuf>, build_dir: Option<PathBuf>) -> Self {
+    pub fn with_overrides(
+        public_dir: Option<PathBuf>,
+        pages_dir: Option<PathBuf>,
+        dist_dir: Option<PathBuf>,
+    ) -> Self {
         let defaults = Self::repo_root_default();
 
         Self {
             public_dir: public_dir.unwrap_or(defaults.public_dir),
-            build_dir: build_dir.unwrap_or(defaults.build_dir),
+            pages_dir: pages_dir.unwrap_or(defaults.pages_dir),
+            dist_dir: dist_dir.unwrap_or(defaults.dist_dir),
         }
     }
 }
@@ -144,14 +151,17 @@ mod tests {
         let roots = StaticAssetRoots::repo_root_default();
 
         assert!(roots.public_dir.ends_with(Path::new("frontend/public")));
-        assert!(roots.build_dir.ends_with(Path::new("frontend/build")));
+        assert!(roots.pages_dir.ends_with(Path::new("frontend/build")));
+        assert!(roots.dist_dir.ends_with(Path::new("frontend/dist")));
     }
 
     #[test]
     fn static_asset_roots_allow_partial_overrides() {
-        let roots = StaticAssetRoots::with_overrides(Some(PathBuf::from("/tmp/public")), None);
+        let roots =
+            StaticAssetRoots::with_overrides(Some(PathBuf::from("/tmp/public")), None, None);
 
         assert_eq!(roots.public_dir, PathBuf::from("/tmp/public"));
-        assert!(roots.build_dir.ends_with(Path::new("frontend/build")));
+        assert!(roots.pages_dir.ends_with(Path::new("frontend/build")));
+        assert!(roots.dist_dir.ends_with(Path::new("frontend/dist")));
     }
 }

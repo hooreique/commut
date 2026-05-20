@@ -1,0 +1,14 @@
+{
+  "{{ xtermCss }}": [
+    "xterm",
+    ".css"
+  ],
+  "{{ unoCss }}": [
+    "uno",
+    ".css"
+  ],
+  "{{ appMjs }}": [
+    "app",
+    ".mjs"
+  ]
+}

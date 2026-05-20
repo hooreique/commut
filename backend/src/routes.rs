@@ -1,6 +1,8 @@
 //! HTTP and WebSocket routes for the Rust `commut` server.
 //!
 //! API overview:
+//! - `GET /api/build-info`
+//!   - returns `<version> <digest>` using the build-time backend source digest
 //! - `POST /api/nonce`
 //!   - issues a Base64 nonce for the authentication handshake
 //!   - stores that nonce in memory for a short time
@@ -37,6 +39,7 @@ use tower_http::services::{ServeDir, ServeFile};
 
 use crate::{
     app::StaticAssetRoots,
+    build_info,
     contract::{
         Dimensions, WS_CLOSE_NORMAL, WS_CLOSE_PTY_EXIT, WS_TYPE_PTY_DATA, build_resize_payload,
         parse_dimensions_or_default, parse_ws_frame, split_dot_pair,
@@ -63,8 +66,8 @@ pub fn build_router(deps: RouteDeps, static_roots: StaticAssetRoots) -> Router {
             "/fonts",
             ServeDir::new(static_roots.public_dir.join("fonts")),
         )
-        .nest_service("/app", ServeDir::new(static_roots.public_dir.join("app")))
-        .nest_service("/build", ServeDir::new(static_roots.build_dir))
+        .nest_service("/app", ServeDir::new(static_roots.pages_dir.join("app")))
+        .nest_service("/dist", ServeDir::new(static_roots.dist_dir))
         .nest_service(
             "/favicon.ico",
             ServeFile::new(static_roots.public_dir.join("favicon.ico")),
@@ -76,9 +79,14 @@ pub fn build_router(deps: RouteDeps, static_roots: StaticAssetRoots) -> Router {
         .route("/api/nonce", post(post_nonce))
         .route("/api/ticket", post(post_ticket))
         .route("/api/salt", post(post_salt))
+        .route("/api/build-info", get(get_build_info))
         .route("/sockets/{id}", get(get_socket))
         .fallback(not_found)
         .with_state(deps)
+}
+
+async fn get_build_info() -> String {
+    build_info::current_wire_body()
 }
 
 async fn post_nonce(State(deps): State<RouteDeps>) -> Result<Response<Body>, AppError> {

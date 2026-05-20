@@ -1,0 +1,12 @@
+{
+  "entry": "src/app.ts",
+  "tsconfig": "tsconfig.runtime.json",
+  "outDir": "dist",
+  "sourcemap": true,
+  "clean": false,
+  "hash": true,
+  "outputOptions": {
+    "entryFileNames": "[name].[hash].mjs",
+    "chunkFileNames": "[name].[hash].mjs"
+  }
+}

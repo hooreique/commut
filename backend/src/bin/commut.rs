@@ -1,17 +1,14 @@
-use std::{env, path::PathBuf};
+use std::env;
 
 use anyhow::{Context, Result};
 use commut_rust_spec_tests::{
-    app::{AppConfig, RuntimeConfig, StaticAssetRoots, run},
-    runtime::{
-        build_frontend_assets, load_authorized_public_key_pem, parse_cli_args,
-        should_build_frontend_for_run,
-    },
+    app::{AppConfig, RuntimeConfig, run},
+    runtime::{load_authorized_public_key_pem, load_static_asset_roots, parse_cli_args},
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let cli = parse_cli_args()?;
+    parse_cli_args()?;
     let runtime = RuntimeConfig {
         host: env::var("COMMUT_HOST").unwrap_or_else(|_| "127.0.0.1".to_owned()),
         port: env::var("COMMUT_PORT")
@@ -23,26 +20,9 @@ async fn main() -> Result<()> {
     };
 
     let authorized_public_key_pem = load_authorized_public_key_pem()?;
-    let explicit_public_dir = env::var_os("COMMUT_PUBLIC_DIR").map(PathBuf::from);
-    let explicit_build_dir = env::var_os("COMMUT_BUILD_DIR").map(PathBuf::from);
-    let built_frontend_root = if should_build_frontend_for_run(
-        cli,
-        explicit_public_dir.is_some(),
-        explicit_build_dir.is_some(),
-    ) {
-        Some(build_frontend_assets()?)
-    } else {
-        None
-    };
-
     let config = AppConfig {
         authorized_public_key_pem,
-        static_assets: StaticAssetRoots::with_overrides(
-            explicit_public_dir
-                .or_else(|| built_frontend_root.as_ref().map(|path| path.join("public"))),
-            explicit_build_dir
-                .or_else(|| built_frontend_root.as_ref().map(|path| path.join("build"))),
-        ),
+        static_assets: load_static_asset_roots()?,
     };
 
     run(config, runtime).await

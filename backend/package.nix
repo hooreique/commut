@@ -31,7 +31,8 @@ rustPlatform.buildRustPackage {
     mv $out/bin/commut $out/bin/.commut-wrapped
     makeWrapper $out/bin/.commut-wrapped $out/bin/commut \
       --set COMMUT_PUBLIC_DIR ${clientPackage}/public \
-      --set COMMUT_BUILD_DIR ${clientPackage}/build
+      --set COMMUT_BUILD_DIR ${clientPackage}/build \
+      --set COMMUT_DIST_DIR ${clientPackage}/dist
   '';
 
   meta = {

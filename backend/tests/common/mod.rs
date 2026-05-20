@@ -1,5 +1,8 @@
 use anyhow::Result;
-use commut_rust_spec_tests::support::TestHarness;
+
+pub mod support;
+
+use support::TestHarness;
 
 /// Spawn a fresh ignored-test harness.
 ///
