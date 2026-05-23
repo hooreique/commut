@@ -23,12 +23,12 @@ This file only covers repository-specific guidance for agents working in this tr
 ## Validation Commands
 
 - **Enter dev shell:** `nix develop`
-- **Build (all):** `nix build .#commut-client .#commut .#commut-installer`
+- **Build (all):** `nix build .#commut .#commut-installer`
 - **Build (backend):** `cargo build --manifest-path backend/Cargo.toml`
 - **Test (backend):** `cargo test --manifest-path backend/Cargo.toml`
   - Prefer to run targeted tests with `cargo test --manifest-path backend/Cargo.toml <test_name>` because some integration tests are slower.
 - **Install frontend dependencies:** `pnpm --dir frontend install`
-- **Build (frontend assets, after installing frontend dependencies):** `pnpm --dir frontend run prepare`
+- **Build (frontend assets, after installing frontend dependencies):** `pnpm --dir frontend run build`
 - **Typecheck (frontend, after installing frontend dependencies):** `pnpm --dir frontend run typecheck`
 - **Format (Rust):** `cargo fmt --manifest-path backend/Cargo.toml`
 - **Format (frontend):** no dedicated formatter is configured; keep TypeScript/CSS style consistent with surrounding files.
@@ -38,5 +38,5 @@ This file only covers repository-specific guidance for agents working in this tr
 
 - The frontend commands in this file expect `frontend/node_modules` to exist. If it does not, run `pnpm --dir frontend install` first.
 - Prefer focused backend test runs when changing a narrow area.
-- When changing the frontend, run `pnpm --dir frontend run typecheck` and rebuild assets with `pnpm --dir frontend run prepare` after installing frontend dependencies.
+- When changing the frontend, run `pnpm --dir frontend run typecheck` and rebuild assets with `pnpm --dir frontend run build` after installing frontend dependencies.
 - When changing packaging or installer behavior, validate with `nix build` for the affected package.

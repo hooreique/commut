@@ -203,7 +203,6 @@ dependencies = [
  "base64",
  "futures-util",
  "hkdf",
- "http",
  "libc",
  "p256",
  "portable-pty",
@@ -214,7 +213,6 @@ dependencies = [
  "sha2",
  "tokio",
  "tokio-tungstenite",
- "tower",
  "tower-http",
  "urlencoding",
 ]

@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@types/node':
+        specifier: 24.11.0
+        version: 24.11.0
       '@unocss/cli':
         specifier: 66.5.10
         version: 66.5.10
@@ -25,7 +28,7 @@ importers:
         version: 0.18.2
       unocss:
         specifier: 66.5.10
-        version: 66.5.10(postcss@8.5.6)(vite@7.3.0(jiti@2.6.1))
+        version: 66.5.10(postcss@8.5.6)(vite@7.3.0(@types/node@24.11.0)(jiti@2.6.1))
 
 packages:
 
@@ -465,6 +468,9 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/node@24.11.0':
+    resolution: {integrity: sha512-fPxQqz4VTgPI/IQ+lj9r0h+fDR66bzoeMGHp8ASee+32OSGIkeASsoZuJixsQoVef1QJbeubcPBxKk22QVoWdw==}
+
   '@unocss/astro@66.5.10':
     resolution: {integrity: sha512-R1UU8lfIqcuorGpiuU+9pQEmK8uBBk1sf5re1db9kr23924Ia/aBCmfs4W2xyVCwJ0cGBv9C3ywDgOsgkHFCbQ==}
     peerDependencies:
@@ -883,6 +889,9 @@ packages:
   unconfig@7.4.2:
     resolution: {integrity: sha512-nrMlWRQ1xdTjSnSUqvYqJzbTBFugoqHobQj58B2bc8qxHKBBHMNNsWQFP3Cd3/JZK907voM2geYPWqD4VK3MPQ==}
 
+  undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+
   unocss@66.5.10:
     resolution: {integrity: sha512-h3OjHVKsYFiet7ZSgxD6+odC1bpx+N0JYP2bWy/vcqjrApaZmYg4CKmvxCFNxw1+qVoxyfhhjcVZHGUpf9jaKA==}
     engines: {node: '>=14'}
@@ -1260,13 +1269,17 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
-  '@unocss/astro@66.5.10(vite@7.3.0(jiti@2.6.1))':
+  '@types/node@24.11.0':
+    dependencies:
+      undici-types: 7.16.0
+
+  '@unocss/astro@66.5.10(vite@7.3.0(@types/node@24.11.0)(jiti@2.6.1))':
     dependencies:
       '@unocss/core': 66.5.10
       '@unocss/reset': 66.5.10
-      '@unocss/vite': 66.5.10(vite@7.3.0(jiti@2.6.1))
+      '@unocss/vite': 66.5.10(vite@7.3.0(@types/node@24.11.0)(jiti@2.6.1))
     optionalDependencies:
-      vite: 7.3.0(jiti@2.6.1)
+      vite: 7.3.0(@types/node@24.11.0)(jiti@2.6.1)
 
   '@unocss/cli@66.5.10':
     dependencies:
@@ -1394,7 +1407,7 @@ snapshots:
     dependencies:
       '@unocss/core': 66.5.10
 
-  '@unocss/vite@66.5.10(vite@7.3.0(jiti@2.6.1))':
+  '@unocss/vite@66.5.10(vite@7.3.0(@types/node@24.11.0)(jiti@2.6.1))':
     dependencies:
       '@jridgewell/remapping': 2.3.5
       '@unocss/config': 66.5.10
@@ -1405,7 +1418,7 @@ snapshots:
       pathe: 2.0.3
       tinyglobby: 0.2.15
       unplugin-utils: 0.3.1
-      vite: 7.3.0(jiti@2.6.1)
+      vite: 7.3.0(@types/node@24.11.0)(jiti@2.6.1)
 
   '@xterm/addon-webgl@0.18.0(@xterm/xterm@5.5.0)':
     dependencies:
@@ -1742,9 +1755,11 @@ snapshots:
       quansync: 1.0.0
       unconfig-core: 7.4.2
 
-  unocss@66.5.10(postcss@8.5.6)(vite@7.3.0(jiti@2.6.1)):
+  undici-types@7.16.0: {}
+
+  unocss@66.5.10(postcss@8.5.6)(vite@7.3.0(@types/node@24.11.0)(jiti@2.6.1)):
     dependencies:
-      '@unocss/astro': 66.5.10(vite@7.3.0(jiti@2.6.1))
+      '@unocss/astro': 66.5.10(vite@7.3.0(@types/node@24.11.0)(jiti@2.6.1))
       '@unocss/cli': 66.5.10
       '@unocss/core': 66.5.10
       '@unocss/postcss': 66.5.10(postcss@8.5.6)
@@ -1762,9 +1777,9 @@ snapshots:
       '@unocss/transformer-compile-class': 66.5.10
       '@unocss/transformer-directives': 66.5.10
       '@unocss/transformer-variant-group': 66.5.10
-      '@unocss/vite': 66.5.10(vite@7.3.0(jiti@2.6.1))
+      '@unocss/vite': 66.5.10(vite@7.3.0(@types/node@24.11.0)(jiti@2.6.1))
     optionalDependencies:
-      vite: 7.3.0(jiti@2.6.1)
+      vite: 7.3.0(@types/node@24.11.0)(jiti@2.6.1)
     transitivePeerDependencies:
       - postcss
       - supports-color
@@ -1778,7 +1793,7 @@ snapshots:
     dependencies:
       rolldown: 1.0.0-beta.55
 
-  vite@7.3.0(jiti@2.6.1):
+  vite@7.3.0(@types/node@24.11.0)(jiti@2.6.1):
     dependencies:
       esbuild: 0.27.2
       fdir: 6.5.0(picomatch@4.0.3)
@@ -1787,6 +1802,7 @@ snapshots:
       rollup: 4.54.0
       tinyglobby: 0.2.15
     optionalDependencies:
+      '@types/node': 24.11.0
       fsevents: 2.3.3
       jiti: 2.6.1
 

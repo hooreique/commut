@@ -1,14 +1,22 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "cp-xterm-css": "mkdir -p build && cp node_modules/@xterm/xterm/css/xterm.css build/xterm.css",
-    "build-fe": "tsdown --no-clean --sourcemap --out-dir=build src/app.ts",
-    "prepare": "unocss && pnpm run cp-xterm-css && pnpm run build-fe",
+    "rm-fonts": "rm -f public/fonts/*.woff2",
+    "clean": "rm -rf dist build build-temp",
+    "app-mjs": "rm -f dist/app.*.mjs dist/app.*.mjs.map && tsdown",
+    "xterm-css": "mkdir -p build-temp && cp node_modules/@xterm/xterm/css/xterm.css build-temp/xterm.css && node build-src/digest-css.ts xterm build-temp dist",
+    "uno-css": "mkdir -p build-temp && unocss && node build-src/digest-css.ts uno build-temp dist",
+    "build-info-json": "mkdir -p build/app && node build-src/build-info.ts dist .mjs .css > build/app/build-info.json",
+    "index-html": "mkdir -p build/app && cat src/index.html | node build-src/process-page.ts src/index.sub.json dist | node build-src/embed-digest.ts > build/app/index.html",
+    "story-html": "mkdir -p build/app && cat src/story.html | node build-src/process-page.ts src/story.sub.json dist > build/app/story.html",
+    "build": "pnpm run clean && pnpm run app-mjs && pnpm run xterm-css && pnpm run uno-css && pnpm run build-info-json && pnpm run index-html && pnpm run story-html",
     "typecheck": "tsc --project tsconfig.json"
   },
   "devDependencies": {
+    "@types/node": "24.11.0",
     "@unocss/cli": "66.5.10",
     "@unocss/reset": "66.5.10",
     "@xterm/addon-webgl": "0.18.0",

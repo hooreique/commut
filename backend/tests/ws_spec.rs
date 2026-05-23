@@ -3,9 +3,8 @@
 mod common;
 
 use anyhow::Result;
-use commut_rust_spec_tests::support::WsAppMessage;
 
-use common::spawn_harness;
+use common::{spawn_harness, support::WsAppMessage};
 
 #[tokio::test]
 async fn websocket_upgrade_requires_a_token() -> Result<()> {

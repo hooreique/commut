@@ -5,12 +5,12 @@ mod common;
 use anyhow::Result;
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
-use commut_rust_spec_tests::support::TestHarness;
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use common::spawn_harness;
+use common::{spawn_harness, support::TestHarness};
 
 fn repo_root() -> &'static Path {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -30,11 +30,104 @@ fn base64_of_zeroes(len: usize) -> String {
     BASE64_STANDARD.encode(vec![0_u8; len])
 }
 
+fn expected_backend_source_digest() -> Result<String> {
+    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut hasher = Sha256::new();
+
+    for path in backend_source_files(manifest_dir)? {
+        let relative_path = normalized_backend_path(&path, manifest_dir);
+        let contents = fs::read(path)?;
+
+        hasher.update(relative_path.as_bytes());
+        hasher.update([0]);
+        hasher.update(contents.len().to_string().as_bytes());
+        hasher.update([0]);
+        hasher.update(contents);
+        hasher.update([0]);
+    }
+
+    Ok(BASE64_STANDARD.encode(hasher.finalize()))
+}
+
+fn backend_source_files(manifest_dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = vec![
+        manifest_dir.join("Cargo.toml"),
+        manifest_dir.join("Cargo.lock"),
+        manifest_dir.join("build.rs"),
+    ];
+    collect_rust_sources(&manifest_dir.join("src"), &mut files)?;
+    files.sort_by_key(|path| normalized_backend_path(path, manifest_dir));
+    Ok(files)
+}
+
+fn collect_rust_sources(directory: &Path, files: &mut Vec<PathBuf>) -> Result<()> {
+    for entry in fs::read_dir(directory)? {
+        let entry = entry?;
+        let path = entry.path();
+        let file_type = entry.file_type()?;
+
+        if file_type.is_dir() {
+            collect_rust_sources(&path, files)?;
+        } else if path.extension().is_some_and(|extension| extension == "rs") {
+            files.push(path);
+        }
+    }
+
+    Ok(())
+}
+
+fn normalized_backend_path(path: &Path, manifest_dir: &Path) -> String {
+    path.strip_prefix(manifest_dir)
+        .expect("backend source path should be inside backend crate")
+        .iter()
+        .map(|part| part.to_string_lossy())
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
 async fn spawn_harness_with_static_assets(
     public_dir: PathBuf,
-    build_dir: PathBuf,
+    pages_dir: PathBuf,
+    dist_dir: PathBuf,
 ) -> Result<TestHarness> {
-    TestHarness::spawn_with_static_assets(public_dir, build_dir).await
+    TestHarness::spawn_with_static_assets(public_dir, pages_dir, dist_dir).await
+}
+
+#[tokio::test]
+async fn build_info_endpoint_returns_version_and_embedded_source_digest() -> Result<()> {
+    // Contract coverage:
+    // - `GET /api/build-info` returns plaintext `<version> <digest>`
+    // - digest is the build-time SHA-256 of the backend source and dependency lock inputs
+    let harness = spawn_harness().await?;
+
+    let (status, body) = harness.get_text("/api/build-info").await?;
+
+    assert_eq!(status, 200, "response body: {body}");
+    assert_eq!(
+        body,
+        format!(
+            "{} {}",
+            env!("CARGO_PKG_VERSION"),
+            commut_rust_spec_tests::build_info::BACKEND_SOURCE_DIGEST
+        )
+    );
+    assert_eq!(body.matches(' ').count(), 1);
+
+    let (_, digest) = body
+        .split_once(' ')
+        .expect("build-info body should contain one space separator");
+    assert_eq!(
+        digest,
+        commut_rust_spec_tests::build_info::BACKEND_SOURCE_DIGEST
+    );
+    assert_eq!(digest, expected_backend_source_digest()?);
+    assert_eq!(
+        BASE64_STANDARD.decode(digest.as_bytes())?.len(),
+        32,
+        "digest should be a Base64-encoded SHA-256 value"
+    );
+
+    harness.shutdown().await
 }
 
 #[tokio::test]
@@ -56,29 +149,47 @@ async fn static_favicon_is_served_from_public_root() -> Result<()> {
 }
 
 #[tokio::test]
-async fn static_manifest_and_build_assets_are_served_from_their_specified_roots() -> Result<()> {
+async fn static_manifest_pages_and_dist_assets_are_served_from_their_specified_roots() -> Result<()>
+{
     // Contract coverage:
-    // - static assets are served from the configured public and build roots
+    // - static assets are served from the configured public, pages, and dist roots
     let root = unique_temp_dir("static-assets");
     let public_dir = root.join("public");
-    let build_dir = root.join("build");
+    let pages_dir = root.join("build");
+    let dist_dir = root.join("dist");
     fs::create_dir_all(&public_dir)?;
-    fs::create_dir_all(&build_dir)?;
+    fs::create_dir_all(pages_dir.join("app"))?;
+    fs::create_dir_all(&dist_dir)?;
     fs::write(public_dir.join("manifest.json"), "{\"name\":\"fixture\"}\n")?;
-    fs::write(build_dir.join("app.mjs"), "console.log('fixture build');\n")?;
+    fs::write(pages_dir.join("app/index.html"), "<!doctype html>\n")?;
+    fs::write(
+        dist_dir.join("app.12345678.mjs"),
+        "console.log('fixture dist');\n",
+    )?;
 
-    let harness = spawn_harness_with_static_assets(public_dir.clone(), build_dir.clone()).await?;
+    let harness =
+        spawn_harness_with_static_assets(public_dir.clone(), pages_dir.clone(), dist_dir.clone())
+            .await?;
 
     let (manifest_status, manifest_body) = harness.get_text("/manifest.json").await?;
-    let (build_status, build_body) = harness.get_text("/build/app.mjs").await?;
+    let (page_status, page_body) = harness.get_text("/app/index.html").await?;
+    let (dist_status, dist_body) = harness.get_text("/dist/app.12345678.mjs").await?;
 
     assert_eq!(manifest_status, 200);
-    assert_eq!(build_status, 200);
+    assert_eq!(page_status, 200);
+    assert_eq!(dist_status, 200);
     assert_eq!(
         manifest_body,
         fs::read_to_string(public_dir.join("manifest.json"))?
     );
-    assert_eq!(build_body, fs::read_to_string(build_dir.join("app.mjs"))?);
+    assert_eq!(
+        page_body,
+        fs::read_to_string(pages_dir.join("app/index.html"))?
+    );
+    assert_eq!(
+        dist_body,
+        fs::read_to_string(dist_dir.join("app.12345678.mjs"))?
+    );
 
     harness.shutdown().await?;
     if let Err(error) = fs::remove_dir_all(root) {

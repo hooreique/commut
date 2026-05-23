@@ -2,6 +2,7 @@
 //!
 //! The helpers in this module wrap the current server implementation with a
 //! compact harness for HTTP and WebSocket contract tests.
+#![allow(dead_code)]
 
 use aes_gcm::{
     Aes128Gcm,
@@ -27,7 +28,7 @@ use tokio::time::{Duration, Instant, sleep, timeout};
 use tokio::{net::TcpListener, sync::oneshot, task::JoinHandle};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
 
-use crate::{
+use commut_rust_spec_tests::{
     app::{AppConfig, build_app},
     contract,
 };
@@ -99,13 +100,6 @@ pub enum WsAppMessage {
     },
 }
 
-/// Minimal PTY exit payload carried in WebSocket close reason code `4001`.
-///
-/// The close reason is serialized as a JSON object with camelCase fields on the
-/// wire.
-///
-pub type PtyExitReason = contract::PtyExitReason;
-
 /// WebSocket close event captured by the test harness.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WsCloseEvent {
@@ -135,8 +129,9 @@ impl TestHarness {
     ///
     /// Returns an error when the test server or HTTP client cannot be created.
     pub async fn spawn() -> Result<Self> {
-        let defaults = crate::app::StaticAssetRoots::repo_root_default();
-        Self::spawn_with_static_assets(defaults.public_dir, defaults.build_dir).await
+        let defaults = commut_rust_spec_tests::app::StaticAssetRoots::repo_root_default();
+        Self::spawn_with_static_assets(defaults.public_dir, defaults.pages_dir, defaults.dist_dir)
+            .await
     }
 
     /// Boot a fresh server instance configured for tests with explicit static
@@ -146,16 +141,21 @@ impl TestHarness {
     ///
     /// Returns an error when the authorized key cannot be encoded, the app
     /// cannot be built, or the local listener/client cannot be created.
-    pub async fn spawn_with_static_assets(public_dir: PathBuf, build_dir: PathBuf) -> Result<Self> {
+    pub async fn spawn_with_static_assets(
+        public_dir: PathBuf,
+        pages_dir: PathBuf,
+        dist_dir: PathBuf,
+    ) -> Result<Self> {
         let signing_key = SigningKey::random(&mut OsRng);
         let authorized_public_key_pem = signing_key
             .verifying_key()
             .to_public_key_pem(LineEnding::LF)?;
         let app = build_app(AppConfig {
             authorized_public_key_pem,
-            static_assets: crate::app::StaticAssetRoots {
+            static_assets: commut_rust_spec_tests::app::StaticAssetRoots {
                 public_dir,
-                build_dir,
+                pages_dir,
+                dist_dir,
             },
         })?;
         let listener = TcpListener::bind("127.0.0.1:0").await?;
@@ -183,12 +183,6 @@ impl TestHarness {
             shutdown_tx: std::sync::Arc::new(std::sync::Mutex::new(Some(shutdown_tx))),
             server_task: std::sync::Arc::new(std::sync::Mutex::new(Some(server_task))),
         })
-    }
-
-    /// Returns the server base URL, for example `http://127.0.0.1:43001`.
-    #[must_use]
-    pub fn base_url(&self) -> &str {
-        &self.base_url
     }
 
     /// Tear the server down and release all resources.
@@ -807,24 +801,5 @@ fn ensure_status_ok(status: u16, body: &str) -> Result<()> {
         Ok(())
     } else {
         Err(anyhow!("expected 200 OK, got {status} with body: {body}"))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn ticket_response_parser_matches_the_spec_wire_shape() {
-        let parsed = TicketResponse::parse("id123.pubkey456").expect("valid ticket response");
-        assert_eq!(parsed.id, "id123");
-        assert_eq!(parsed.server_ephemeral_public_key_base64, "pubkey456");
-    }
-
-    #[test]
-    fn salt_response_parser_matches_the_spec_wire_shape() {
-        let parsed = SaltResponse::parse("id123.salt456").expect("valid salt response");
-        assert_eq!(parsed.id, "id123");
-        assert_eq!(parsed.salt_base64, "salt456");
     }
 }

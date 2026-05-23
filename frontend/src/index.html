@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="digest" content="unavailable" />
+  <link rel="icon" sizes="any" href="/images/hono.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.json" />
+  <link href="{{ xtermCss }}" rel="stylesheet" />
+  <link href="{{ unoCss }}" rel="stylesheet" />
+  <title>Commut</title>
+</head>
+
+<body>
+  <div id="app">Loading...</div>
+
+  <footer id="dig" hidden class="text-center text-[0.7rem] opacity-30">
+    <div>FE: <span id="dig-fe"></span></div>
+    <div>BE: <span id="dig-be"></span></div>
+  </footer>
+
+  <script>
+    (() => {
+      /** @type {string} */
+      const digestVal = document.querySelector('meta[name=digest]')?.content?.trim();
+      const footer = document.querySelector('#dig');
+      const feSpan = footer?.querySelector('#dig-fe');
+      const beSpan = footer?.querySelector('#dig-be');
+
+      if (!digestVal || !footer || !feSpan || !beSpan) return;
+
+      feSpan.textContent = digestVal.substring(0, 14);
+      beSpan.textContent = 'loading...';
+      footer.hidden = false;
+
+      const fetchBuildInfo = () => fetch('/api/build-info', {cache: 'no-store'})
+        .then(res => {
+          if (!res.ok) {
+            throw {message: `GET /api/build-info failed with ${res.status}`};
+          }
+
+          return res.text();
+        })
+        .then(text => {
+          beSpan.textContent = text.trim().substring(0, 14) || 'unavailable';
+        })
+        .catch(reason => {
+          beSpan.textContent = 'unavailable';
+          throw reason;
+        });
+
+      fetchBuildInfo().catch(reason => {
+        console.error(reason?.message);
+      });
+    })();
+  </script>
+
+  <script type="module" src="{{ appMjs }}"></script>
+</body>
+
+</html>

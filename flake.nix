@@ -13,11 +13,17 @@
         pkgs = inputs.nixpkgs.legacyPackages.${system};
         flakeRef = "github:hooreique/commut";
         installFlakeRef = "${flakeRef}#commut-installer";
-        client = pkgs.callPackage ./frontend/default.nix { };
-        commut = pkgs.callPackage ./backend/default.nix {
+        fonts = pkgs.callPackage ./hack-woff2.nix { };
+        prepare-fonts = pkgs.callPackage ./prepare-fonts.nix {
+          inherit fonts;
+        };
+        client = pkgs.callPackage ./frontend/package.nix {
+          inherit fonts;
+        };
+        commut = pkgs.callPackage ./backend/package.nix {
           clientPackage = client;
         };
-        installer = pkgs.callPackage ./installer/default.nix {
+        installer = pkgs.callPackage ./installer/package.nix {
           backendPackage = commut;
           clientPackage = client;
           installFlakeRef = installFlakeRef;
@@ -25,20 +31,18 @@
       in
       {
         packages = {
-          "commut-client" = client;
-          commut = commut;
           default = commut;
-          "commut-installer" = installer;
+          commut = commut;
+          commut-installer = installer;
         };
 
-        apps."commut-installer" = {
-          type = "app";
-          program = "${installer}/bin/commut-installer";
+        apps.prepare-fonts = inputs.flake-utils.lib.mkApp {
+          drv = prepare-fonts;
         };
 
         devShells.default = pkgs.mkShell {
           packages = [
-            pkgs.nodejs_22
+            pkgs.nodejs_24
             pkgs.pnpm
             pkgs.typescript
             pkgs.typescript-language-server

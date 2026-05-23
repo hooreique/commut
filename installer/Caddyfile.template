@@ -9,15 +9,22 @@ http://$domain {
 }
 
 https://$domain {
-  @public path /favicon.ico /manifest.json /images/* /fonts/* /app/*
+  handle_path /app/* {
+    header Cache-Control "no-cache"
+    root * {{ clientAppRoot }}
+    file_server
+  }
+
+  @public path /favicon.ico /manifest.json /images/* /fonts/*
 
   handle @public {
     root * {{ clientPublicRoot }}
     file_server
   }
 
-  handle /build/* {
-    root * {{ clientRoot }}
+  handle_path /dist/* {
+    header Cache-Control "public, max-age=31536000, immutable"
+    root * {{ clientDistRoot }}
     file_server
   }
 

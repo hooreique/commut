@@ -21,8 +21,9 @@ let
     inherit installFlakeRef;
   };
   caddyfile = substitute (builtins.readFile ./Caddyfile.template) {
+    clientAppRoot = "${clientPackage}/build/app";
+    clientDistRoot = "${clientPackage}/dist";
     clientPublicRoot = "${clientPackage}/public";
-    clientRoot = "${clientPackage}";
   };
 in
 writeShellApplication {

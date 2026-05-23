@@ -7,8 +7,8 @@ import { defineConfig, extractorSplit } from 'unocss';
 export default defineConfig({
   cli: {
     entry: [{
-      patterns: ['public/app/**/*.html', 'src/**/*.comp.ts'],
-      outFile: 'build/uno.css',
+      patterns: ['src/*.html', 'src/*.comp.ts'],
+      outFile: 'build-temp/uno.css',
     }],
   },
   extractorDefault: {
