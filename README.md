@@ -12,6 +12,7 @@ Before installing commut, prepare:
 - a domain pointed at that server
 - Nix on the target machine
 - a Linux environment with user-level `systemd`
+- a `zsh` executable at `~/.nix-profile/bin/zsh`
 - an authorization key pair
 
 ## Quick Start
