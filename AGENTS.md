@@ -25,6 +25,7 @@ This file only covers repository-specific guidance for agents working in this tr
 - **Enter dev shell:** `nix develop`
 - **Build (all):** `nix build .#commut .#commut-installer`
 - **Build (backend):** `cargo build --manifest-path backend/Cargo.toml`
+- **Lint (backend):** `nix develop --command -- cargo clippy --manifest-path backend/Cargo.toml -- -D warnings`
 - **Test (backend):** `cargo test --manifest-path backend/Cargo.toml`
   - Prefer to run targeted tests with `cargo test --manifest-path backend/Cargo.toml <test_name>` because some integration tests are slower.
 - **Install frontend dependencies:** `pnpm --dir frontend install`
