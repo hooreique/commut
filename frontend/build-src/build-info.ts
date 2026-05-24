@@ -23,7 +23,7 @@ const packageJsonPath = join(projectRoot, 'package.json');
 
 const digest = (content: string): string => createHash('sha256')
   .update(content)
-  .digest('hex')
+  .digest('base64url')
   .slice(0, 8);
 
 const distUrl = (filename: string): string => `/dist/${filename}`;

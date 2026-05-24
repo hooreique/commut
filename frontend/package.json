@@ -9,7 +9,7 @@
     "app-mjs": "rm -f dist/app.*.mjs dist/app.*.mjs.map && tsdown",
     "xterm-css": "mkdir -p build-temp && cp node_modules/@xterm/xterm/css/xterm.css build-temp/xterm.css && node build-src/digest-css.ts xterm build-temp dist",
     "uno-css": "mkdir -p build-temp && unocss && node build-src/digest-css.ts uno build-temp dist",
-    "build-info-json": "mkdir -p build/app && node build-src/build-info.ts dist .mjs .css > build/app/build-info.json",
+    "build-info-json": "mkdir -p build/app && node build-src/build-info.ts dist .mjs .css | tee build/app/build-info.json",
     "index-html": "mkdir -p build/app && cat src/index.html | node build-src/process-page.ts src/index.sub.json dist | node build-src/embed-digest.ts > build/app/index.html",
     "story-html": "mkdir -p build/app && cat src/story.html | node build-src/process-page.ts src/story.sub.json dist > build/app/story.html",
     "build": "pnpm run clean && pnpm run app-mjs && pnpm run xterm-css && pnpm run uno-css && pnpm run build-info-json && pnpm run index-html && pnpm run story-html",
