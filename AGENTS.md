@@ -1,4 +1,4 @@
-# Agent Development Guide
+# AGENTS.md
 
 A file for [guiding coding agents](https://agents.md/).
 
@@ -24,20 +24,20 @@ This file only covers repository-specific guidance for agents working in this tr
 
 - **Enter dev shell:** `nix develop`
 - **Build (all):** `nix build .#commut .#commut-installer`
-- **Build (backend):** `cargo build --manifest-path backend/Cargo.toml`
+- **Build (backend):** `nix develop --command -- cargo build --manifest-path backend/Cargo.toml`
 - **Lint (backend):** `nix develop --command -- cargo clippy --manifest-path backend/Cargo.toml -- -D warnings`
-- **Test (backend):** `cargo test --manifest-path backend/Cargo.toml`
-  - Prefer to run targeted tests with `cargo test --manifest-path backend/Cargo.toml <test_name>` because some integration tests are slower.
-- **Install frontend dependencies:** `pnpm --dir frontend install`
-- **Build (frontend assets, after installing frontend dependencies):** `pnpm --dir frontend run build`
-- **Typecheck (frontend, after installing frontend dependencies):** `pnpm --dir frontend run typecheck`
-- **Format (Rust):** `cargo fmt --manifest-path backend/Cargo.toml`
+- **Test (backend):** `nix develop --command -- cargo test --manifest-path backend/Cargo.toml`
+  - Prefer to run targeted tests with `nix develop --command -- cargo test --manifest-path backend/Cargo.toml <test_name>` because some integration tests are slower.
+- **Install frontend dependencies:** `nix develop --command -- pnpm --dir frontend install --frozen-lockfile`
+- **Build (frontend assets, after installing frontend dependencies):** `nix develop --command -- pnpm --dir frontend run build`
+- **Typecheck (frontend, after installing frontend dependencies):** `nix develop --command -- pnpm --dir frontend run typecheck`
+- **Format (Rust):** `nix develop --command -- cargo fmt --manifest-path backend/Cargo.toml`
 - **Format (frontend):** no dedicated formatter is configured; keep TypeScript/CSS style consistent with surrounding files.
 - **Check Nix files:** `nix flake check`
 
 ## Change-Specific Guidance
 
-- The frontend commands in this file expect `frontend/node_modules` to exist. If it does not, run `pnpm --dir frontend install` first.
+- The frontend commands in this file expect `frontend/node_modules` to exist. If it does not, run `nix develop --command -- pnpm --dir frontend install` first.
 - Prefer focused backend test runs when changing a narrow area.
-- When changing the frontend, run `pnpm --dir frontend run typecheck` and rebuild assets with `pnpm --dir frontend run build` after installing frontend dependencies.
+- When changing the frontend, run `nix develop --command -- pnpm --dir frontend run typecheck` and rebuild assets with `nix develop --command -- pnpm --dir frontend run build` after installing frontend dependencies.
 - When changing packaging or installer behavior, validate with `nix build` for the affected package.
