@@ -457,8 +457,7 @@ esac
   '';
 
   meta = {
-    description = "Draft installer entrypoint for Commut";
+    description = "commut service installer";
     mainProgram = "commut-installer";
-    license = lib.licenses.mit;
   };
 }

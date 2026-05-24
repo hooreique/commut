@@ -16,12 +16,12 @@
     "typecheck": "tsc --project tsconfig.json"
   },
   "devDependencies": {
-    "@types/node": "24.11.0",
-    "@unocss/cli": "66.5.10",
-    "@unocss/reset": "66.5.10",
-    "@xterm/addon-webgl": "0.18.0",
-    "@xterm/xterm": "5.5.0",
-    "tsdown": "0.18.2",
-    "unocss": "66.5.10"
+    "@types/node": "25.9.1",
+    "@unocss/cli": "66.7.0",
+    "@xterm/addon-webgl": "0.19.0",
+    "@xterm/xterm": "6.0.0",
+    "tsdown": "0.22.0",
+    "typescript": "6.0.3",
+    "unocss": "66.7.0"
   }
 }

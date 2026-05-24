@@ -1,9 +1,11 @@
 {
-  fonts,
   lib,
-  nodejs_24,
-  pnpm_9,
   stdenvNoCC,
+  fonts,
+  nodejs_26,
+  pnpm,
+  pnpmConfigHook,
+  fetchPnpmDeps,
 }:
 
 stdenvNoCC.mkDerivation (finalAttrs: {
@@ -15,19 +17,21 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   prePnpmInstall = "";
 
   nativeBuildInputs = [
-    nodejs_24
-    pnpm_9.configHook
+    nodejs_26
+    pnpm
+    pnpmConfigHook
   ];
 
-  pnpmDeps = pnpm_9.fetchDeps {
+  pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs)
       pname
       version
       src
       prePnpmInstall
       ;
-    fetcherVersion = 2;
-    hash = "sha256-3dWlALAtoSfp4IVV7ItAexcVxPAWXQBacZ0mq+slruA=";
+    pnpm = pnpm;
+    fetcherVersion = 3;
+    hash = "sha256-WVlIp0akIY6VDlG4IjtZkHjPSAieQc0Dza8f5KKj374=";
   };
 
   buildPhase = ''
@@ -43,4 +47,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     cp -R ${fonts}/share/fonts/. $out/public/fonts/
     runHook postInstall
   '';
+
+  meta = {
+    description = "commut client";
+  };
 })

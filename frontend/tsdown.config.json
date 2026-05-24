@@ -1,5 +1,11 @@
 {
   "entry": "src/app.ts",
+  "deps": {
+    "onlyBundle": [
+      "@xterm/xterm",
+      "@xterm/addon-webgl"
+    ]
+  },
   "tsconfig": "tsconfig.runtime.json",
   "outDir": "dist",
   "sourcemap": true,

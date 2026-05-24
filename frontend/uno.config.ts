@@ -1,10 +1,24 @@
 import { readFile } from 'node:fs/promises';
 import { URL } from 'node:url';
 
-import { defineConfig, extractorSplit } from 'unocss';
+import { defineConfig, extractorSplit, presetWind4 } from 'unocss';
 
+
+const commutFont = "'Hack Nerd Font', Menlo, Consolas, 'DejaVu Sans Mono', monospace";
 
 export default defineConfig({
+  presets: [
+    presetWind4(),
+  ],
+  theme: {
+    colors: {
+      canvas: '#24272E',
+    },
+    font: {
+      sans: commutFont,
+      mono: commutFont,
+    },
+  },
   cli: {
     entry: [{
       patterns: ['src/*.html', 'src/*.comp.ts'],
@@ -39,27 +53,9 @@ export default defineConfig({
     },
   }],
   preflights: [{
-    getCSS: () => Promise.all([
-      Promise.all([
-        'node_modules/@unocss/reset/sanitize/sanitize.css',
-        'node_modules/@unocss/reset/sanitize/forms.css',
-        'node_modules/@unocss/reset/sanitize/assets.css',
-        'node_modules/@unocss/reset/sanitize/typography.css',
-        'node_modules/@unocss/reset/sanitize/reduce-motion.css',
-        'node_modules/@unocss/reset/sanitize/system-ui.css',
-        'node_modules/@unocss/reset/sanitize/ui-monospace.css',
-      ]
-        .map(name => Promise.resolve(new URL(name, import.meta.url))
-          .then(url => readFile(url))
-          .then(buf => buf.toString())
-          .then(str => `/* ${name} */\n\n${str}`)))
-        .then(arr => arr.join('\n'))
-        .then(str => `\n${str}`),
-      Promise.resolve(new URL('src/base.css', import.meta.url))
-        .then(url => readFile(url))
-        .then(buf => buf.toString())
-        .then(str => `\n/* src/base.css */\n${str}`),
-    ])
-      .then(arr => arr.join('')),
+    getCSS: () => Promise.resolve(new URL('src/fonts.css', import.meta.url))
+      .then(url => readFile(url))
+      .then(buf => buf.toString())
+      .then(str => `\n/* src/fonts.css */\n${str}`),
   }],
 });

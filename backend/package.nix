@@ -36,8 +36,7 @@ rustPlatform.buildRustPackage {
   '';
 
   meta = {
-    description = "Commut backend server";
     mainProgram = "commut";
-    platforms = lib.platforms.linux ++ lib.platforms.darwin;
+    description = "commut server";
   };
 }

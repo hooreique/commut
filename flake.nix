@@ -1,4 +1,6 @@
 {
+  description = "commut";
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -15,8 +17,14 @@
       ];
 
       perSystem =
-        { pkgs, system, ... }:
+        { system, ... }:
         let
+          pkgs = import inputs.nixpkgs {
+            inherit system;
+            overlays = [
+              (final: prev: { pnpm = prev.pnpm.override { nodejs = final.nodejs_26; }; })
+            ];
+          };
           flakeRef = "github:hooreique/commut";
           installFlakeRef = "${flakeRef}#commut-installer";
           fonts = pkgs.callPackage ./hack-woff2.nix { };
@@ -46,9 +54,8 @@
 
           devShells.default = pkgs.mkShell {
             packages = [
-              pkgs.nodejs_24
+              pkgs.nodejs_26
               pkgs.pnpm
-              pkgs.typescript
               pkgs.typescript-language-server
               pkgs.cargo
               pkgs.clippy
