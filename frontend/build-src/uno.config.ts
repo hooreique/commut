@@ -53,7 +53,7 @@ export default defineConfig({
     },
   }],
   preflights: [{
-    getCSS: () => Promise.resolve(new URL('src/fonts.css', import.meta.url))
+    getCSS: () => Promise.resolve(new URL('../src/fonts.css', import.meta.url))
       .then(url => readFile(url))
       .then(buf => buf.toString())
       .then(str => `\n/* src/fonts.css */\n${str}`),
