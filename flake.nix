@@ -20,7 +20,7 @@
           flakeRef = "github:hooreique/commut";
           installFlakeRef = "${flakeRef}#commut-installer";
           fonts = pkgs.callPackage ./hack-woff2.nix { };
-          prepare-fonts = pkgs.callPackage ./prepare-fonts.nix {
+          cp-fonts = pkgs.callPackage ./cp-fonts.nix {
             inherit fonts;
           };
           client = pkgs.callPackage ./frontend/package.nix {
@@ -42,7 +42,7 @@
             commut-installer = installer;
           };
 
-          apps.prepare-fonts.program = prepare-fonts;
+          apps.cp-fonts.program = cp-fonts;
 
           devShells.default = pkgs.mkShell {
             packages = [

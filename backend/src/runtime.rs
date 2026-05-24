@@ -24,7 +24,7 @@ pub const COMMUT_BUILD_DIR_ENV: &str = "COMMUT_BUILD_DIR";
 pub const COMMUT_DIST_DIR_ENV: &str = "COMMUT_DIST_DIR";
 pub const COMMUT_LEGACY_PAGES_DIR_ENV: &str = "COMMUT_PAGES_DIR";
 const FRONTEND_ASSET_USAGE: &str = "Build frontend assets before running the backend:\n  pnpm --dir frontend install\n  pnpm --dir frontend run build";
-const FRONTEND_FONT_USAGE: &str = "Prepare frontend fonts before running the backend:\n  nix run .#prepare-fonts frontend/public/fonts";
+const FRONTEND_FONT_USAGE: &str = "Prepare frontend fonts before running the backend:\n  nix run .#cp-fonts frontend/public/fonts";
 
 /// Parse supported CLI flags for the backend binary.
 ///
@@ -455,7 +455,7 @@ mod tests {
         assert!(message.contains("frontend fonts are not ready"));
         assert!(message.contains("/assets/public/fonts"));
         assert!(message.contains(".woff2"));
-        assert!(message.contains("nix run .#prepare-fonts frontend/public/fonts"));
+        assert!(message.contains("nix run .#cp-fonts frontend/public/fonts"));
     }
 
     #[test]

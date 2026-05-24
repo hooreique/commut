@@ -106,7 +106,7 @@ fn run_errors_with_font_guidance_when_public_fonts_have_no_woff2() -> Result<()>
 
     assert!(stderr.contains("frontend fonts are not ready"));
     assert!(stderr.contains("Expected at least one .woff2 file"));
-    assert!(stderr.contains("nix run .#prepare-fonts frontend/public/fonts"));
+    assert!(stderr.contains("nix run .#cp-fonts frontend/public/fonts"));
 
     fs::remove_dir_all(root)?;
 

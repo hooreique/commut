@@ -5,17 +5,17 @@
 }:
 
 writeShellApplication {
-  name = "prepare-fonts";
+  name = "cp-fonts";
   runtimeInputs = [ coreutils ];
   text = ''
     if [ "$#" -ne 1 ]; then
-      echo "usage: prepare-fonts <output-dir>" >&2
+      echo "usage: cp-fonts <output-dir>" >&2
       exit 64
     fi
 
     target=$1
     if [ -e "$target" ] && [ ! -d "$target" ]; then
-      echo "prepare-fonts: target exists but is not a directory: $target" >&2
+      echo "cp-fonts: target exists but is not a directory: $target" >&2
       exit 1
     fi
 
