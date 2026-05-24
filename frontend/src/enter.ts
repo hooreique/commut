@@ -4,19 +4,20 @@ const blandVect = te.encode('bland-vect');
 
 export const enter = ({ passphrase, encpri }: {
   readonly passphrase: string;
-  readonly encpri: string;
+  readonly encpri: () => string | null;
 }): Promise<ArrayBuffer> => {
   if (!passphrase) {
     return Promise.reject({ message: 'password must not be empty' });
   }
 
-  if (!encpri) {
+  const encp = encpri();
+  if (!encp) {
     return Promise.reject({ message: 'encpri not found' });
   }
 
   return crypto.subtle.importKey('raw', te.encode(passphrase), 'PBKDF2', false, ['deriveKey'])
     .then(key => crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: blandSalt, iterations: 300_000 }, key, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']))
-    .then(key => crypto.subtle.decrypt({ name: 'AES-GCM', iv: blandVect }, key, Uint8Array.fromBase64(encpri)))
+    .then(key => crypto.subtle.decrypt({ name: 'AES-GCM', iv: blandVect }, key, Uint8Array.fromBase64(encp)))
     .catch(() => {
       throw { message: 'wrong password' };
     });

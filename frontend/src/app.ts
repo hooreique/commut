@@ -29,7 +29,7 @@ mql.addEventListener('change', ev => {
 });
 
 const outerEl: Readonly<HTMLDivElement> = outer({
-  encpri: localStorage.getItem('encpri'),
+  encpri: () => localStorage.getItem('encpri'),
   fetch: fetch,
   smallInit: () => mql.matches,
   onWidthChange,

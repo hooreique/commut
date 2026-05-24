@@ -2,7 +2,7 @@ import { inner } from './inner.comp.ts';
 
 
 export const outer = ({ encpri, fetch, smallInit, onWidthChange }: {
-  readonly encpri: string;
+  readonly encpri: () => string | null;
   readonly fetch: Fetch;
   readonly smallInit: () => boolean;
   readonly onWidthChange: (listen: (isSmall: boolean) => void) => void;
