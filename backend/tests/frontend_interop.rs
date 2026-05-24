@@ -11,7 +11,7 @@
 mod common;
 
 use anyhow::Result;
-use commut_rust_spec_tests::contract::{
+use commut::contract::{
     DEFAULT_COLS, DEFAULT_ROWS, HKDF_INFO_DOWN, HKDF_INFO_UP, WS_CLOSE_NORMAL, WS_TYPE_PTY_DATA,
     WS_TYPE_RESIZE,
 };

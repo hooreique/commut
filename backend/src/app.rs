@@ -26,18 +26,11 @@ pub struct StaticAssetRoots {
 }
 
 impl StaticAssetRoots {
-    /// Resolve the repository-local frontend asset directories.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the backend crate is no longer located directly under the
-    /// repository root.
+    /// Resolve the repository-local frontend asset directories from the
+    /// current working directory.
     #[must_use]
     pub fn repo_root_default() -> Self {
-        let crate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let repo_root = crate_dir
-            .parent()
-            .expect("backend crate should live directly under the repository root");
+        let repo_root = find_repo_root_from_current_dir().unwrap_or_else(current_dir_fallback);
 
         Self {
             public_dir: repo_root.join("frontend/public"),
@@ -62,6 +55,18 @@ impl StaticAssetRoots {
             dist_dir: dist_dir.unwrap_or(defaults.dist_dir),
         }
     }
+}
+
+fn find_repo_root_from_current_dir() -> Option<PathBuf> {
+    let current_dir = std::env::current_dir().ok()?;
+    current_dir
+        .ancestors()
+        .find(|path| path.join("backend/Cargo.toml").is_file() && path.join("frontend").is_dir())
+        .map(PathBuf::from)
+}
+
+fn current_dir_fallback() -> PathBuf {
+    std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

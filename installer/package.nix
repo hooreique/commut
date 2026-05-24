@@ -8,7 +8,6 @@
   stdenv,
   writeShellApplication,
 }:
-
 let
   substitute = import ./mustache.nix;
   topLevelHelp = substitute (builtins.readFile ./top-level-help.txt) {
@@ -459,5 +458,6 @@ esac
   meta = {
     description = "commut service installer";
     mainProgram = "commut-installer";
+    homepage = "https://github.com/hooreique/commut";
   };
 }

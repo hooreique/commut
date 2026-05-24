@@ -7,10 +7,13 @@
   pnpmConfigHook,
   fetchPnpmDeps,
 }:
-
+let
+  original = builtins.fromJSON (builtins.readFile ./package.json);
+  pname = original.name;
+  version = original.version;
+in
 stdenvNoCC.mkDerivation (finalAttrs: {
-  pname = "commut-client";
-  version = "0.1.0";
+  inherit pname version;
 
   src = lib.cleanSource ./.;
 
@@ -50,5 +53,6 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   meta = {
     description = "commut client";
+    homepage = "https://github.com/hooreique/commut";
   };
 })

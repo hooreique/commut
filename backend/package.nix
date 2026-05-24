@@ -5,10 +5,13 @@
   pkg-config,
   rustPlatform,
 }:
-
+let
+  original = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+  pname = original.package.name;
+  version = original.package.version;
+in
 rustPlatform.buildRustPackage {
-  pname = "commut";
-  version = "0.1.0";
+  inherit pname version;
 
   src = lib.cleanSource ./.;
 
@@ -21,6 +24,10 @@ rustPlatform.buildRustPackage {
     "commut"
   ];
   doCheck = false;
+
+  preBuild = ''
+    export RUSTFLAGS="--remap-path-prefix=$NIX_BUILD_TOP=/build ''${RUSTFLAGS:-}"
+  '';
 
   nativeBuildInputs = [
     makeWrapper
@@ -36,7 +43,8 @@ rustPlatform.buildRustPackage {
   '';
 
   meta = {
-    mainProgram = "commut";
+    mainProgram = pname;
     description = "commut server";
+    homepage = "https://github.com/hooreique/commut";
   };
 }

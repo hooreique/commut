@@ -108,7 +108,7 @@ async fn build_info_endpoint_returns_version_and_embedded_source_digest() -> Res
         format!(
             "{} {}",
             env!("CARGO_PKG_VERSION"),
-            commut_rust_spec_tests::build_info::BACKEND_SOURCE_DIGEST
+            commut::build_info::BACKEND_SOURCE_DIGEST
         )
     );
     assert_eq!(body.matches(' ').count(), 1);
@@ -116,10 +116,7 @@ async fn build_info_endpoint_returns_version_and_embedded_source_digest() -> Res
     let (_, digest) = body
         .split_once(' ')
         .expect("build-info body should contain one space separator");
-    assert_eq!(
-        digest,
-        commut_rust_spec_tests::build_info::BACKEND_SOURCE_DIGEST
-    );
+    assert_eq!(digest, commut::build_info::BACKEND_SOURCE_DIGEST);
     assert_eq!(digest, expected_backend_source_digest()?);
     assert_eq!(
         BASE64_STANDARD.decode(digest.as_bytes())?.len(),

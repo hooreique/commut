@@ -28,7 +28,7 @@ use tokio::time::{Duration, Instant, sleep, timeout};
 use tokio::{net::TcpListener, sync::oneshot, task::JoinHandle};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
 
-use commut_rust_spec_tests::{
+use commut::{
     app::{AppConfig, build_app},
     contract,
 };
@@ -129,7 +129,7 @@ impl TestHarness {
     ///
     /// Returns an error when the test server or HTTP client cannot be created.
     pub async fn spawn() -> Result<Self> {
-        let defaults = commut_rust_spec_tests::app::StaticAssetRoots::repo_root_default();
+        let defaults = commut::app::StaticAssetRoots::repo_root_default();
         Self::spawn_with_static_assets(defaults.public_dir, defaults.pages_dir, defaults.dist_dir)
             .await
     }
@@ -152,7 +152,7 @@ impl TestHarness {
             .to_public_key_pem(LineEnding::LF)?;
         let app = build_app(AppConfig {
             authorized_public_key_pem,
-            static_assets: commut_rust_spec_tests::app::StaticAssetRoots {
+            static_assets: commut::app::StaticAssetRoots {
                 public_dir,
                 pages_dir,
                 dist_dir,

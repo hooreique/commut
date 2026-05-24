@@ -1,7 +1,7 @@
 use std::env;
 
 use anyhow::{Context, Result};
-use commut_rust_spec_tests::{
+use commut::{
     app::{AppConfig, RuntimeConfig, run},
     runtime::{load_authorized_public_key_pem, load_static_asset_roots, parse_cli_args},
 };

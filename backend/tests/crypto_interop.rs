@@ -7,7 +7,7 @@
 use anyhow::Result;
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
-use commut_rust_spec_tests::{crypto::AuthorizedKeySet, state::Checkpoint};
+use commut::{crypto::AuthorizedKeySet, state::Checkpoint};
 use p256::SecretKey;
 use p256::pkcs8::DecodePrivateKey;
 use serde::Deserialize;

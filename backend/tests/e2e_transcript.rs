@@ -14,7 +14,7 @@
 mod common;
 
 use anyhow::Result;
-use commut_rust_spec_tests::contract::WS_CLOSE_PTY_EXIT;
+use commut::contract::WS_CLOSE_PTY_EXIT;
 use serde::Deserialize;
 use tokio::time::Duration;
 

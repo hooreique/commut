@@ -194,7 +194,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "commut-rust-spec-tests"
+name = "commut"
 version = "0.1.0"
 dependencies = [
  "aes-gcm",
