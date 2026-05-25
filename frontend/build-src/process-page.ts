@@ -1,10 +1,25 @@
+import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import test from 'node:test';
+
+/**
+ * process-page reads one source HTML page from stdin and writes rendered HTML to stdout.
+ *
+ * Substitution spec:
+ * - The substitution file is a JSON object whose keys are required placeholders like "{{ appScript }}".
+ * - Each value is [distBaseName, extension], for example ["app", ".mjs"].
+ * - Each placeholder resolves to exactly one hashed dist asset named "<distBaseName>.<hash><extension>".
+ * - Unhashed dist assets are ignored.
+ * - Rendered HTML must not contain unresolved "{{ name }}" placeholders or "/build/" asset references.
+ */
+
 import {
   readFile,
   readdir,
 } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 
 type PageInputs = {
   readonly substitutionsPath: string;
@@ -22,7 +37,7 @@ const distUrl = (filename: string): string => `/dist/${filename}`;
 
 const findDistAsset = (distPath: string, distBaseName: string, extension: string): Promise<string> => {
   const pattern = new RegExp(
-    `^${escapeRegExp(distBaseName)}(?:\\.[^.]+)?${escapeRegExp(extension)}$`,
+    `^${escapeRegExp(distBaseName)}\\.[^.]+${escapeRegExp(extension)}$`,
     'u',
   );
 
@@ -32,7 +47,7 @@ const findDistAsset = (distPath: string, distBaseName: string, extension: string
       .sort())
     .then(matches => {
       if (matches.length !== 1) {
-        throw { message: `expected exactly one ${distBaseName}${extension} asset, found ${matches.length}` };
+        throw { message: `expected exactly one hashed ${distBaseName}.*${extension} asset, found ${matches.length}` };
       }
 
       return distUrl(matches[0]);
@@ -154,7 +169,137 @@ const renderPage = ({ substitutionsPath, distPath }: PageInputs): Promise<string
     distPath,
   ).then(substitutions => renderTemplate(html, substitutions)));
 
-renderPage(parsePageInputs())
+const main = (): Promise<void> => renderPage(parsePageInputs())
   .then(html => {
     process.stdout.write(html);
   });
+
+const inTest = process.env.NODE_TEST_CONTEXT !== undefined;
+
+if (import.meta.main && !inTest) {
+  main();
+}
+
+if (inTest) {
+  const testTempRoot = resolve(projectRoot, 'build-test-temp/process-page');
+
+  const assertThrowsMessage = (fn: () => unknown, message: string): void => {
+    assert.throws(fn, (error: unknown) => (
+      isRecord(error)
+      && error.message === message
+    ));
+  };
+
+  const assertRejectsMessage = (fn: () => Promise<unknown>, message: string): Promise<void> => assert.rejects(
+    fn,
+    (error: unknown) => (
+      isRecord(error)
+      && error.message === message
+    ),
+  );
+
+  const withTempDir = (fn: (dir: string) => Promise<void>): Promise<void> => mkdir(testTempRoot, { recursive: true })
+    .then(() => mkdtemp(join(testTempRoot, 'case-')))
+    .then(dir => fn(dir)
+      .finally(() => rm(dir, { recursive: true, force: true })));
+
+  const writeEmptyFiles = (dir: string, filenames: readonly string[]): Promise<void> =>
+    Promise.all(filenames.map(filename => writeFile(join(dir, filename), '')))
+      .then(() => undefined);
+
+  test('renderTemplate replaces required placeholders', () => {
+    assert.equal(
+      renderTemplate(
+        '<script type="module" src="{{ appScript }}"></script><link href="{{ appStyle }}" rel="stylesheet" />',
+        new Map([
+          ['{{ appScript }}', '/dist/app.abc123.mjs'],
+          ['{{ appStyle }}', '/dist/uno.def456.css'],
+        ]),
+      ),
+      '<script type="module" src="/dist/app.abc123.mjs"></script><link href="/dist/uno.def456.css" rel="stylesheet" />',
+    );
+  });
+
+  test('renderTemplate rejects missing required placeholders', () => {
+    assertThrowsMessage(
+      () => renderTemplate('<main></main>', new Map([['{{ appScript }}', '/dist/app.abc123.mjs']])),
+      'page template is missing {{ appScript }}',
+    );
+  });
+
+  test('renderTemplate rejects unresolved placeholders', () => {
+    assertThrowsMessage(
+      () => renderTemplate('<main>{{ pageTitle }}</main>', new Map()),
+      'page template has unresolved placeholder {{ pageTitle }}',
+    );
+  });
+
+  test('renderTemplate rejects build asset references', () => {
+    assertThrowsMessage(
+      () => renderTemplate('<script src="/build/app.mjs"></script>', new Map()),
+      'HTML pages must reference /dist assets, not /build assets',
+    );
+  });
+
+  test('parseSubstitutions accepts valid asset substitutions', () => {
+    assert.deepEqual(
+      parseSubstitutions('{ "{{ appScript }}": ["app", ".mjs"], "{{ appStyle }}": ["uno", ".css"] }', 'sub.json'),
+      {
+        '{{ appScript }}': ['app', '.mjs'],
+        '{{ appStyle }}': ['uno', '.css'],
+      },
+    );
+  });
+
+  test('parseSubstitutions rejects invalid placeholders', () => {
+    assertThrowsMessage(
+      () => parseSubstitutions('{ "appScript": ["app", ".mjs"] }', 'sub.json'),
+      'sub.json has invalid placeholder appScript',
+    );
+  });
+
+  test('parseSubstitutions rejects invalid asset substitutions', () => {
+    assertThrowsMessage(
+      () => parseSubstitutions('{ "{{ appScript }}": ["app"] }', 'sub.json'),
+      'sub.json has invalid substitution for {{ appScript }}',
+    );
+  });
+
+  test('parseSubstitutions rejects extensions without a leading dot', () => {
+    assertThrowsMessage(
+      () => parseSubstitutions('{ "{{ appScript }}": ["app", "mjs"] }', 'sub.json'),
+      'sub.json substitution for {{ appScript }} must use an extension starting with "."',
+    );
+  });
+
+  test('findDistAsset resolves one hashed dist asset', () => withTempDir(
+    dir => writeEmptyFiles(dir, [
+      'app.abc123.mjs',
+      'app.mjs',
+      'story.abc123.mjs',
+    ])
+      .then(() => findDistAsset(dir, 'app', '.mjs'))
+      .then(asset => {
+        assert.equal(asset, '/dist/app.abc123.mjs');
+      })
+  ));
+
+  test('findDistAsset ignores unhashed dist assets', () => withTempDir(
+    dir => writeFile(join(dir, 'app.mjs'), '')
+      .then(() => assertRejectsMessage(
+        () => findDistAsset(dir, 'app', '.mjs'),
+        'expected exactly one hashed app.*.mjs asset, found 0',
+      ))
+  ));
+
+  test('findDistAsset rejects multiple hashed dist assets', () => withTempDir(
+    dir => writeEmptyFiles(dir, [
+      'app.abc123.mjs',
+      'app.def456.mjs',
+    ])
+      .then(() => assertRejectsMessage(
+        () => findDistAsset(dir, 'app', '.mjs'),
+        'expected exactly one hashed app.*.mjs asset, found 2',
+      ))
+  ));
+}

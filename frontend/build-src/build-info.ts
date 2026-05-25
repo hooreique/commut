@@ -1,3 +1,16 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+/**
+ * build-info writes metadata for the dist assets that the backend can serve or prefetch.
+ *
+ * Build info spec:
+ * - The version comes from frontend package.json, falling back to "0.0.0".
+ * - Only files whose names end with one of the requested asset extensions are included.
+ * - Included files are converted to "/dist/<filename>" URLs and sorted.
+ * - The digest is an 8-character sha256 base64url digest of the sorted asset URL list.
+ */
+
 import { createHash } from 'node:crypto';
 import {
   readFile,
@@ -5,7 +18,6 @@ import {
 } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
 
 type BuildInfo = {
   readonly version: string;
@@ -27,6 +39,23 @@ const digest = (content: string): string => createHash('sha256')
   .slice(0, 8);
 
 const distUrl = (filename: string): string => `/dist/${filename}`;
+
+const buildInfoFromFilenames = (
+  version: string,
+  filenames: readonly string[],
+  assetExtensions: readonly string[],
+): BuildInfo => {
+  const assets = filenames
+    .filter(filename => assetExtensions.some(extension => filename.endsWith(extension)))
+    .map(distUrl)
+    .sort();
+
+  return {
+    version,
+    digest: digest(assets.join('\n')),
+    assets,
+  };
+};
 
 const readPackageVersion = (): Promise<string> => readFile(packageJsonPath, 'utf8')
   .then(content => {
@@ -52,22 +81,58 @@ const parseBuildInfoTarget = (): BuildInfoTarget => {
 };
 
 const getBuildInfo = ({ distDir, assetExtensions }: BuildInfoTarget): Promise<BuildInfo> => Promise.all([
-  readdir(distDir)
-    .then(filenames => filenames
-      .filter(filename => assetExtensions.some(extension => filename.endsWith(extension)))
-      .map(distUrl)
-      .sort()),
+  readdir(distDir),
   readPackageVersion(),
 ])
-  .then(([assets, version]) => ({
-    version,
-    digest: digest(assets.join('\n')),
-    assets,
-  }));
+  .then(([filenames, version]) => buildInfoFromFilenames(version, filenames, assetExtensions));
 
 const printBuildInfo = (target: BuildInfoTarget): Promise<void> => getBuildInfo(target)
   .then(buildInfo => {
     process.stdout.write(`${JSON.stringify(buildInfo, null, 2)}\n`);
   });
 
-printBuildInfo(parseBuildInfoTarget());
+const main = (): Promise<void> => printBuildInfo(parseBuildInfoTarget());
+
+const inTest = process.env.NODE_TEST_CONTEXT !== undefined;
+
+if (import.meta.main && !inTest) {
+  main();
+}
+
+if (inTest) {
+  test('buildInfoFromFilenames includes requested asset extensions as sorted dist URLs', () => {
+    assert.deepEqual(
+      buildInfoFromFilenames('1.2.3', [
+        'uno.bbb.css',
+        'app.zzz.mjs.map',
+        'app.aaa.mjs',
+        'story.html',
+        'app.d.ts',
+        'xterm.ccc.css',
+      ], [
+        '.mjs',
+        '.css',
+      ]),
+      {
+        version: '1.2.3',
+        digest: digest([
+          '/dist/app.aaa.mjs',
+          '/dist/uno.bbb.css',
+          '/dist/xterm.ccc.css',
+        ].join('\n')),
+        assets: [
+          '/dist/app.aaa.mjs',
+          '/dist/uno.bbb.css',
+          '/dist/xterm.ccc.css',
+        ],
+      },
+    );
+  });
+
+  test('buildInfoFromFilenames changes digest when the asset list changes', () => {
+    const first = buildInfoFromFilenames('1.2.3', ['app.aaa.mjs'], ['.mjs']);
+    const second = buildInfoFromFilenames('1.2.3', ['app.bbb.mjs'], ['.mjs']);
+
+    assert.notEqual(first.digest, second.digest);
+  });
+}

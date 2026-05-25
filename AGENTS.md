@@ -16,7 +16,7 @@ This file only covers repository-specific guidance for agents working in this tr
 
 - `flake.nix`: shared project entrypoint and package definitions
 - `backend/`: Rust backend service
-- `frontend/`: TypeScript web client and static assets
+- `frontend/`: TypeScript web client and static assets; see `frontend/AGENTS.md` for frontend-specific build-source test conventions
 - `installer/`: Nix and shell deployment tooling
 - `.github/`: GitHub automation
 

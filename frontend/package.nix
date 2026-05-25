@@ -37,6 +37,10 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     hash = "sha256-WVlIp0akIY6VDlG4IjtZkHjPSAieQc0Dza8f5KKj374=";
   };
 
+  preBuild = ''
+    pnpm run build-test
+  '';
+
   buildPhase = ''
     runHook preBuild
     pnpm run build

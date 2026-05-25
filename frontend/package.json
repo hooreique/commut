@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "rm-fonts": "rm -f public/fonts/*.woff2",
-    "clean": "rm -rf dist build build-temp",
+    "clean": "rm -rf dist build build-temp build-test-temp",
     "app-mjs": "rm -f dist/app.*.mjs dist/app.*.mjs.map && tsdown --config build-src/tsdown.config.ts",
     "xterm-css": "mkdir -p build-temp && cp node_modules/@xterm/xterm/css/xterm.css build-temp/xterm.css && node build-src/digest-css.ts xterm build-temp dist",
     "uno-css": "mkdir -p build-temp && unocss --config build-src/uno.config.ts && node build-src/digest-css.ts uno build-temp dist",
@@ -14,6 +14,7 @@
     "index-html": "mkdir -p build/app && cat src/index.html | node build-src/process-page.ts src/index.sub.json dist | node build-src/embed-digest.ts > build/app/index.html",
     "story-html": "mkdir -p build/app && cat src/story.html | node build-src/process-page.ts src/story.sub.json dist > build/app/story.html",
     "build": "pnpm run clean && pnpm run app-mjs && pnpm run xterm-css && pnpm run uno-css && pnpm run build-info-json && pnpm run index-html && pnpm run story-html",
+    "build-test": "node --test build-src/process-page.ts build-src/embed-digest.ts build-src/digest-css.ts build-src/build-info.ts build-src/uno.config.ts",
     "typecheck": "tsc --build"
   },
   "devDependencies": {

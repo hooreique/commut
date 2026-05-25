@@ -3,6 +3,7 @@ dist
 out
 build
 build-temp
+build-test-temp
 result*
 *.tsbuildinfo
 *.log
