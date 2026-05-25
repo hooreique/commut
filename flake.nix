@@ -36,7 +36,6 @@
             pkgs.cargo
             pkgs.coreutils
             pkgs.nodejs_26
-            pkgs.pkg-config
             pkgs.pnpm
             pkgs.rustc
           ];

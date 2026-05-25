@@ -1,6 +1,5 @@
 {
   lib,
-  pkg-config,
   rustPlatform,
 }:
 let
@@ -15,17 +14,16 @@ rustPlatform.buildRustPackage {
 
   cargoLock.lockFile = ./Cargo.lock;
 
-  cargoBuildFlags = [ "--bin" "commut" ];
+  cargoBuildFlags = [
+    "--bin"
+    "commut"
+  ];
 
   doCheck = false;
 
   preBuild = ''
     export RUSTFLAGS="--remap-path-prefix=$NIX_BUILD_TOP=/build ''${RUSTFLAGS:-}"
   '';
-
-  nativeBuildInputs = [
-    pkg-config
-  ];
 
   meta = {
     mainProgram = pname;
