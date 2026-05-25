@@ -127,15 +127,15 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1778162163,
-        "narHash": "sha256-T3SRKU4jqdhNAeywRssIXhEcFfS+Tvdmev3Sb9uHTus=",
-        "owner": "hooreique",
+        "lastModified": 1779685912,
+        "narHash": "sha256-t4Qa1atVXB1EZRdJ0eDzeoYsuIzNE5sLMbLZp45EKKE=",
+        "owner": "xna00",
         "repo": "unocss-language-server",
-        "rev": "8a8d8d46d51f79524996195c589188f8e916a752",
+        "rev": "ab9c5d741925ef96a661687f6679723ba8c36a17",
         "type": "github"
       },
       "original": {
-        "owner": "hooreique",
+        "owner": "xna00",
         "repo": "unocss-language-server",
         "type": "github"
       }

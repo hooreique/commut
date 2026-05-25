@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    uno-ls.url = "github:hooreique/unocss-language-server";
+    uno-ls.url = "github:xna00/unocss-language-server";
   };
 
   outputs =
