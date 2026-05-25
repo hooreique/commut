@@ -55,6 +55,28 @@ That page is the browser-side key setup entrypoint. Paste the contents of `autho
 
 Then open `https://your-domain.example.com/app/index.html` and connect from the main app.
 
+## Local Development Server
+
+From a repository checkout, install frontend dependencies once:
+
+```sh
+nix develop --command -- pnpm --dir frontend install --frozen-lockfile
+```
+
+Then run the local development server:
+
+```sh
+nix run .#dev-server
+```
+
+Open `http://127.0.0.1:8080/app/index.html`. Use
+`http://127.0.0.1:8080/app/story.html` for the same browser-side key setup flow.
+
+The development server builds the frontend assets, starts the backend, and serves
+both through local Caddy. It uses the same authorized public key lookup as the
+installed backend, so keep `~/.config/commut/authorized.pub.pem` in place or set
+`COMMUT_AUTHORIZED_PUBLIC_KEY_PEM_FILE` or `COMMUT_AUTHORIZED_PUBLIC_KEY_PEM`.
+
 ## Notes
 
 - The installer expects an authorized public key file and will fail if it does not exist.

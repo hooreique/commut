@@ -3,6 +3,14 @@
 Frontend-specific guidance for agents maintaining code under `frontend/`.
 The repository-level `../AGENTS.md` still applies.
 
+## Validation
+
+- If `frontend/node_modules` is missing, run `nix develop --command -- pnpm --dir frontend install --frozen-lockfile` first.
+- Run pure runtime module tests with `nix develop --command -- pnpm --dir frontend run test`.
+- Run build-source tests with `nix develop --command -- pnpm --dir frontend run build-test`.
+- Run `nix develop --command -- pnpm --dir frontend run typecheck` after changing TypeScript.
+- Run `nix develop --command -- pnpm --dir frontend run build` when script behavior affects generated assets or HTML.
+
 ## File Layout
 
 - Keep frontend code flat within one-level directories; prefer patterns like `src/*.ts`, `src/*.comp.ts`, `src/*.pure.ts`, `build-src/*.ts`, and `tests/*.test.ts`.
@@ -14,10 +22,13 @@ The repository-level `../AGENTS.md` still applies.
 ## TypeScript Style
 
 - Use Promise APIs over `await` syntax where practical. The project owner dislikes `await`; this is a preference, not a deep technical rule.
+- Keep test imports static and at the top of the file. Do not use dynamic imports or ad-hoc assertion wrapper types.
+
+## Testing Boundaries
+
 - Use Node's built-in `node:test` and `node:assert/strict`; do not add a frontend test framework.
 - Do not add browser UI test tooling such as Playwright; UI-level testing is intentionally out of scope because it is too heavy for this project.
 - Test only selected behavior that can be implemented as pure modules.
-- Keep test imports static and at the top of the file. Do not use dynamic imports or ad-hoc assertion wrapper types.
 - Do not create modules only for tests. Repetition in test files is acceptable because test-only shared modules can make specs affect each other indirectly.
 - Reusing helper functions inside the same test file is fine.
 
@@ -59,10 +70,3 @@ if (inTest) {
 - Keep selected pure tests in `tests/*.test.ts`, because `src` implementation and Node tests run in different runtime contexts.
 - Put durable behavioral specs in JSDoc on the tested function, value, or type.
 - Do not duplicate specs in test code; tests should contain test implementation only.
-
-## Validation
-
-- Run build-source tests with `nix develop --command -- pnpm --dir frontend run build-test`.
-- Run pure runtime module tests with `nix develop --command -- pnpm --dir frontend run test`.
-- Run `nix develop --command -- pnpm --dir frontend run typecheck` after changing TypeScript.
-- Run `nix develop --command -- pnpm --dir frontend run build` when script behavior affects generated assets or HTML.

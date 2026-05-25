@@ -31,12 +31,23 @@
           cp-fonts = pkgs.callPackage ./cp-fonts.nix {
             inherit fonts;
           };
+          devServerDeps = [
+            pkgs.caddy
+            pkgs.cargo
+            pkgs.coreutils
+            pkgs.nodejs_26
+            pkgs.pkg-config
+            pkgs.pnpm
+            pkgs.rustc
+          ];
+          dev-server = pkgs.callPackage ./dev-server.nix {
+            inherit fonts;
+            runtimeInputs = devServerDeps;
+          };
           client = pkgs.callPackage ./frontend/package.nix {
             inherit fonts;
           };
-          commut = pkgs.callPackage ./backend/package.nix {
-            clientPackage = client;
-          };
+          commut = pkgs.callPackage ./backend/package.nix { };
           installer = pkgs.callPackage ./installer/package.nix {
             backendPackage = commut;
             clientPackage = client;
@@ -52,19 +63,14 @@
           };
 
           apps.cp-fonts.program = cp-fonts;
+          apps.dev-server.program = dev-server;
 
           devShells.default = pkgs.mkShell {
-            packages = [
-              pkgs.nodejs_26
-              pkgs.pnpm
+            packages = devServerDeps ++ [
               pkgs.typescript-language-server
-              pkgs.cargo
               pkgs.clippy
-              pkgs.pkg-config
               pkgs.rust-analyzer
-              pkgs.rustc
               pkgs.rustfmt
-              pkgs.caddy
               pkgs.woff2
               inputs.uno-ls.packages.${system}.default
             ];

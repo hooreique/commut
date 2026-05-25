@@ -8,23 +8,8 @@ use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
 
-use common::{spawn_harness, support::TestHarness};
-
-fn repo_root() -> &'static Path {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("backend crate should live directly under the repository root")
-}
-
-fn unique_temp_dir(name: &str) -> PathBuf {
-    let unique = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("wall clock should be after unix epoch")
-        .as_nanos();
-    std::env::temp_dir().join(format!("commut-{name}-{unique}"))
-}
+use common::spawn_harness;
 
 fn base64_of_zeroes(len: usize) -> String {
     BASE64_STANDARD.encode(vec![0_u8; len])
@@ -85,14 +70,6 @@ fn normalized_backend_path(path: &Path, manifest_dir: &Path) -> String {
         .join("/")
 }
 
-async fn spawn_harness_with_static_assets(
-    public_dir: PathBuf,
-    pages_dir: PathBuf,
-    dist_dir: PathBuf,
-) -> Result<TestHarness> {
-    TestHarness::spawn_with_static_assets(public_dir, pages_dir, dist_dir).await
-}
-
 #[tokio::test]
 async fn build_info_endpoint_returns_version_and_embedded_source_digest() -> Result<()> {
     // Contract coverage:
@@ -125,74 +102,6 @@ async fn build_info_endpoint_returns_version_and_embedded_source_digest() -> Res
     );
 
     harness.shutdown().await
-}
-
-#[tokio::test]
-async fn static_favicon_is_served_from_public_root() -> Result<()> {
-    // Contract coverage:
-    // - static assets are served from the configured public root
-    let harness = spawn_harness().await?;
-
-    let (status, body) = harness.get_bytes("/favicon.ico").await?;
-    let expected = fs::read(repo_root().join("frontend/public/favicon.ico"))?;
-
-    assert_eq!(status, 200);
-    assert_eq!(
-        body, expected,
-        "favicon bytes should match the public asset"
-    );
-
-    harness.shutdown().await
-}
-
-#[tokio::test]
-async fn static_manifest_pages_and_dist_assets_are_served_from_their_specified_roots() -> Result<()>
-{
-    // Contract coverage:
-    // - static assets are served from the configured public, pages, and dist roots
-    let root = unique_temp_dir("static-assets");
-    let public_dir = root.join("public");
-    let pages_dir = root.join("build");
-    let dist_dir = root.join("dist");
-    fs::create_dir_all(&public_dir)?;
-    fs::create_dir_all(pages_dir.join("app"))?;
-    fs::create_dir_all(&dist_dir)?;
-    fs::write(public_dir.join("manifest.json"), "{\"name\":\"fixture\"}\n")?;
-    fs::write(pages_dir.join("app/index.html"), "<!doctype html>\n")?;
-    fs::write(
-        dist_dir.join("app.12345678.mjs"),
-        "console.log('fixture dist');\n",
-    )?;
-
-    let harness =
-        spawn_harness_with_static_assets(public_dir.clone(), pages_dir.clone(), dist_dir.clone())
-            .await?;
-
-    let (manifest_status, manifest_body) = harness.get_text("/manifest.json").await?;
-    let (page_status, page_body) = harness.get_text("/app/index.html").await?;
-    let (dist_status, dist_body) = harness.get_text("/dist/app.12345678.mjs").await?;
-
-    assert_eq!(manifest_status, 200);
-    assert_eq!(page_status, 200);
-    assert_eq!(dist_status, 200);
-    assert_eq!(
-        manifest_body,
-        fs::read_to_string(public_dir.join("manifest.json"))?
-    );
-    assert_eq!(
-        page_body,
-        fs::read_to_string(pages_dir.join("app/index.html"))?
-    );
-    assert_eq!(
-        dist_body,
-        fs::read_to_string(dist_dir.join("app.12345678.mjs"))?
-    );
-
-    harness.shutdown().await?;
-    if let Err(error) = fs::remove_dir_all(root) {
-        eprintln!("[api_spec] failed to remove temp static-assets dir: {error}");
-    }
-    Ok(())
 }
 
 #[tokio::test]

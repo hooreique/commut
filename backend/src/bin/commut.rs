@@ -3,7 +3,7 @@ use std::env;
 use anyhow::{Context, Result};
 use commut::{
     app::{AppConfig, RuntimeConfig, run},
-    runtime::{load_authorized_public_key_pem, load_static_asset_roots, parse_cli_args},
+    runtime::{load_authorized_public_key_pem, parse_cli_args},
 };
 
 #[tokio::main]
@@ -22,7 +22,6 @@ async fn main() -> Result<()> {
     let authorized_public_key_pem = load_authorized_public_key_pem()?;
     let config = AppConfig {
         authorized_public_key_pem,
-        static_assets: load_static_asset_roots()?,
     };
 
     run(config, runtime).await

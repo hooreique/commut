@@ -23,7 +23,6 @@ use p256::{
 use rand::random;
 use reqwest::{Client, Method, StatusCode};
 use sha2::Sha256;
-use std::path::PathBuf;
 use tokio::time::{Duration, Instant, sleep, timeout};
 use tokio::{net::TcpListener, sync::oneshot, task::JoinHandle};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async};
@@ -129,34 +128,12 @@ impl TestHarness {
     ///
     /// Returns an error when the test server or HTTP client cannot be created.
     pub async fn spawn() -> Result<Self> {
-        let defaults = commut::app::StaticAssetRoots::repo_root_default();
-        Self::spawn_with_static_assets(defaults.public_dir, defaults.pages_dir, defaults.dist_dir)
-            .await
-    }
-
-    /// Boot a fresh server instance configured for tests with explicit static
-    /// asset roots.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error when the authorized key cannot be encoded, the app
-    /// cannot be built, or the local listener/client cannot be created.
-    pub async fn spawn_with_static_assets(
-        public_dir: PathBuf,
-        pages_dir: PathBuf,
-        dist_dir: PathBuf,
-    ) -> Result<Self> {
         let signing_key = SigningKey::random(&mut OsRng);
         let authorized_public_key_pem = signing_key
             .verifying_key()
             .to_public_key_pem(LineEnding::LF)?;
         let app = build_app(AppConfig {
             authorized_public_key_pem,
-            static_assets: commut::app::StaticAssetRoots {
-                public_dir,
-                pages_dir,
-                dist_dir,
-            },
         })?;
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let address = listener.local_addr()?;
@@ -285,8 +262,8 @@ impl TestHarness {
 
     /// Issue a raw HTTP GET and return status plus UTF-8 body text.
     ///
-    /// This is used for static-file and fallback route checks where the spec
-    /// defines only the plain HTTP surface.
+    /// This is used for fallback route checks where the spec defines only the
+    /// plain HTTP surface.
     ///
     /// # Errors
     ///
@@ -296,36 +273,10 @@ impl TestHarness {
         self.request_text(Method::GET, uri, String::new()).await
     }
 
-    /// Issue a raw HTTP GET and return status plus raw response bytes.
-    ///
-    /// Binary assets such as `favicon.ico` need byte-level checks rather than
-    /// lossy UTF-8 decoding.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error when the HTTP request fails or the response body cannot
-    /// be read.
-    pub async fn get_bytes(&self, uri: &str) -> Result<(u16, Vec<u8>)> {
-        let response = self
-            .client
-            .request(Method::GET, format!("{}{}", self.base_url, uri))
-            .send()
-            .await
-            .map_err(|error| anyhow!("request failed: {error}"))?;
-
-        let status = response.status();
-        let body = response
-            .bytes()
-            .await
-            .map_err(|error| anyhow!("failed to read response body: {error}"))?;
-
-        Ok((status.as_u16(), body.to_vec()))
-    }
-
     /// Produce an authorization signature over base64-decoded input bytes.
     ///
     /// This helper stands in for the browser-side ECDSA signing step described
-    /// in the spec and current frontend implementation.
+    /// in the backend wire spec.
     ///
     /// # Errors
     ///

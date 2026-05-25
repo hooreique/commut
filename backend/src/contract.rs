@@ -11,11 +11,17 @@
 //!
 //! Protocol summary:
 //! - HTTP handshake request/response bodies use dot-separated plain-text pairs
+//! - HKDF `info` for browser-to-server traffic is `client -> server`
+//! - HKDF `info` for server-to-browser traffic is `server -> client`
 //! - WebSocket binary type `0` is encrypted PTY data
 //! - WebSocket binary type `1` is plaintext resize data
 //! - invalid or missing initial dimensions fall back to `100,30`
 //! - close code `4000` is normal client close
 //! - close code `4001` indicates PTY exit
+//!
+//! This backend contract is the source of truth for browser clients. Client
+//! code should mirror these values; backend tests should not read client source
+//! files to infer the contract.
 
 use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, Serialize};

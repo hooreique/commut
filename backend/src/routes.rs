@@ -35,10 +35,8 @@ use axum::{
 };
 use futures_util::SinkExt;
 use serde::Deserialize;
-use tower_http::services::{ServeDir, ServeFile};
 
 use crate::{
-    app::StaticAssetRoots,
     build_info,
     contract::{
         Dimensions, WS_CLOSE_NORMAL, WS_CLOSE_PTY_EXIT, WS_TYPE_PTY_DATA, build_resize_payload,
@@ -56,26 +54,8 @@ pub struct RouteDeps {
     pub authorized_keys: AuthorizedKeySet,
 }
 
-pub fn build_router(deps: RouteDeps, static_roots: StaticAssetRoots) -> Router {
+pub fn build_router(deps: RouteDeps) -> Router {
     Router::new()
-        .nest_service(
-            "/images",
-            ServeDir::new(static_roots.public_dir.join("images")),
-        )
-        .nest_service(
-            "/fonts",
-            ServeDir::new(static_roots.public_dir.join("fonts")),
-        )
-        .nest_service("/app", ServeDir::new(static_roots.pages_dir.join("app")))
-        .nest_service("/dist", ServeDir::new(static_roots.dist_dir))
-        .nest_service(
-            "/favicon.ico",
-            ServeFile::new(static_roots.public_dir.join("favicon.ico")),
-        )
-        .nest_service(
-            "/manifest.json",
-            ServeFile::new(static_roots.public_dir.join("manifest.json")),
-        )
         .route("/api/nonce", post(post_nonce))
         .route("/api/ticket", post(post_ticket))
         .route("/api/salt", post(post_salt))
