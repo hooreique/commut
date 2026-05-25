@@ -8,7 +8,7 @@
   fetchPnpmDeps,
 }:
 let
-  original = builtins.fromJSON (builtins.readFile ./package.json);
+  original = lib.importJSON ./package.json;
   pname = original.name;
   version = original.version;
 in

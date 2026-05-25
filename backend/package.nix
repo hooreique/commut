@@ -3,7 +3,7 @@
   rustPlatform,
 }:
 let
-  original = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+  original = lib.importTOML ./Cargo.toml;
   pname = original.package.name;
   version = original.package.version;
 in
