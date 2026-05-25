@@ -3,6 +3,7 @@ declare const azFlag: unique symbol;
 /** `[a-zA-Z]` 를 만족하는 문자열 */
 export type Az = string & { [azFlag]: never };
 
+/** Returns the input as Az when it is exactly one ASCII letter. */
 export const toAz = (str: string): Az => {
   if (str.length !== 1) throw { message: `[${str}] is too long` };
   const charCode = str.toUpperCase().charCodeAt(0);

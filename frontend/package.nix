@@ -38,6 +38,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   };
 
   preBuild = ''
+    pnpm run test
     pnpm run build-test
   '';
 

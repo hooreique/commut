@@ -1,8 +1,8 @@
-import type { Dimensions } from './natural-number.ts';
+import type { Dimensions } from './natural-number.pure.ts';
 
-import { channel } from './channel.ts';
-import type { Commut } from './commut.ts';
-import type { VirtualKbdPartial } from './virtual-kbd.ts';
+import { channel } from './channel.pure.ts';
+import type { Commut } from './commut.pure.ts';
+import type { VirtualKbdPartial } from './virtual-kbd.pure.ts';
 import { header } from './header.comp.ts';
 import { mainFrame } from './main-frame.comp.ts';
 import { virtualKbd } from './virtual-kbd.comp.ts';

@@ -47,6 +47,7 @@
           packages = {
             default = commut;
             commut = commut;
+            commut-client = client;
             commut-installer = installer;
           };
 

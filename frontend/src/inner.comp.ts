@@ -1,14 +1,14 @@
-import type { Dimensions } from './natural-number.ts';
+import type { Dimensions } from './natural-number.pure.ts';
 
 import type { Conn } from './connect.ts';
-import type { Commut } from './commut.ts';
-import { channel } from './channel.ts';
+import type { Commut } from './commut.pure.ts';
+import { channel } from './channel.pure.ts';
 import { enter } from './enter.ts';
 import { connect } from './connect.ts';
 import { withTrace } from './traceable-fetch.ts';
-import { reader, writer, writeResize } from './protocol.ts';
-import type { VirtualKbdPartial } from './virtual-kbd.ts';
-import { toAz } from './virtual-kbd.ts';
+import { reader, writer, writeResize } from './protocol.pure.ts';
+import type { VirtualKbdPartial } from './virtual-kbd.pure.ts';
+import { toAz } from './virtual-kbd.pure.ts';
 import { rack } from './rack.comp.ts';
 
 
@@ -33,7 +33,7 @@ export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
 
   onWsOpen(({ send, close, encrypt, decrypt }) => {
     const read = reader(decrypt);
-    const write = writer(encrypt);
+    const write = writer(encrypt, bytes => crypto.getRandomValues(bytes));
 
     emitCommutReady({
       emitSend: (() => {

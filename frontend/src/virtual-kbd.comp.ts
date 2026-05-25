@@ -1,5 +1,5 @@
-import type { VirtualKbd, VirtualKbdPartial } from './virtual-kbd.ts';
-import { VK } from './virtual-kbd.ts';
+import type { VirtualKbd, VirtualKbdPartial } from './virtual-kbd.pure.ts';
+import { VK } from './virtual-kbd.pure.ts';
 
 
 const vkBtn = ({ vk, emitVk, emitVkPartial }: {

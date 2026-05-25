@@ -1,10 +1,10 @@
 import { Terminal } from '@xterm/xterm';
 import { WebglAddon } from '@xterm/addon-webgl';
 
-import type { Dimensions, NaturalNumber } from './natural-number.ts';
+import type { Dimensions, NaturalNumber } from './natural-number.pure.ts';
 
-import { channel } from './channel.ts';
-import type { Commut } from './commut.ts';
+import { channel } from './channel.pure.ts';
+import type { Commut } from './commut.pure.ts';
 import { welcomePanel } from './welcome.comp.ts';
 
 

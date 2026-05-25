@@ -15,6 +15,7 @@
     "story-html": "mkdir -p build/app && cat src/story.html | node build-src/process-page.ts src/story.sub.json dist > build/app/story.html",
     "build": "pnpm run clean && pnpm run app-mjs && pnpm run xterm-css && pnpm run uno-css && pnpm run build-info-json && pnpm run index-html && pnpm run story-html",
     "build-test": "node --test build-src/process-page.ts build-src/embed-digest.ts build-src/digest-css.ts build-src/build-info.ts build-src/uno.config.ts",
+    "test": "node --test 'tests/*.test.ts'",
     "typecheck": "tsc --build"
   },
   "devDependencies": {

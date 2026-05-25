@@ -1,4 +1,4 @@
-import { channel } from './channel.ts';
+import { channel } from './channel.pure.ts';
 import { outer } from './outer.comp.ts';
 
 

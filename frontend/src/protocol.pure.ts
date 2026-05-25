@@ -1,6 +1,6 @@
-import type { Codec } from './codec.ts';
-import type { Dimensions } from './natural-number.ts';
-import { isNaturalNumber } from './natural-number.ts';
+import type { Codec } from './codec.pure.ts';
+import type { Dimensions } from './natural-number.pure.ts';
+import { isNaturalNumber } from './natural-number.pure.ts';
 
 
 export type Incoming = {
@@ -35,6 +35,7 @@ const readers = (decrypt: Codec): ((cat: Uint8Array<ArrayBuffer>) => Promise<Inc
   },
 ];
 
+/** Reads protocol packets into terminal data, resize events, or unknown-lead markers. */
 export const reader = (decrypt: Codec) => {
   const reads = readers(decrypt);
 
@@ -49,8 +50,12 @@ export const reader = (decrypt: Codec) => {
   };
 };
 
-export const writer = (encrypt: Codec) => (data: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> => {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
+/** Writes terminal data packets with an injected random 12-byte IV source. */
+export const writer = (
+  encrypt: Codec,
+  randomBytes: (bytes: Uint8Array<ArrayBuffer>) => Uint8Array<ArrayBuffer>,
+) => (data: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> => {
+  const iv = randomBytes(new Uint8Array(12));
 
   return encrypt(iv, data)
     .then(buf => new Uint8Array(buf))
@@ -63,6 +68,7 @@ export const writer = (encrypt: Codec) => (data: Uint8Array<ArrayBuffer>): Promi
     });
 };
 
+/** Writes a resize packet as lead 1 followed by "cols,rows" UTF-8 data. */
 export const writeResize = ({ cols, rows }: Dimensions): Uint8Array<ArrayBuffer> => {
   const src = te.encode([cols, rows].join(','));
   const cat = new Uint8Array(1 + src.length);
