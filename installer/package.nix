@@ -19,10 +19,16 @@ let
   uninstallHelp = substitute (builtins.readFile ./uninstall-help.txt) {
     inherit installFlakeRef;
   };
+  runtimeBundle = pkgs.runCommand "commut-runtime" { } ''
+    mkdir -p "$out"
+    ln -s ${clientPackage} "$out/client"
+    ln -s ${backendPackage} "$out/backend"
+    ln -s ${caddy} "$out/caddy"
+  '';
   caddyfile = substitute (builtins.readFile ./Caddyfile.template) {
-    clientAppRoot = "${clientPackage}/build/app";
-    clientDistRoot = "${clientPackage}/dist";
-    clientPublicRoot = "${clientPackage}/public";
+    clientAppRoot = "$runtime_root/client/build/app";
+    clientDistRoot = "$runtime_root/client/dist";
+    clientPublicRoot = "$runtime_root/client/public";
   };
 in
 writeShellApplication {
@@ -35,6 +41,7 @@ writeShellApplication {
     pkgs.findutils
     pkgs.gnugrep
     pkgs.gnused
+    pkgs.nix
   ]
   ++ lib.optionals stdenv.isLinux [
     pkgs.systemd
@@ -195,6 +202,30 @@ write_file() {
   cat >"$path"
 }
 
+ensure_replaceable_gcroot() {
+  if [[ -e "$runtime_root" || -L "$runtime_root" ]]; then
+    [[ -L "$runtime_root" ]] || die \
+      "GC root path exists but is not a symlink: $runtime_root"
+    rm -f "$runtime_root"
+  fi
+}
+
+materialize_gcroot() {
+  mkdir -p "$gcroot_dir"
+  ensure_replaceable_gcroot
+  nix-store --add-root "$runtime_root" --indirect -r ${runtimeBundle} >/dev/null
+}
+
+remove_gcroot() {
+  if [[ -e "$runtime_root" || -L "$runtime_root" ]]; then
+    [[ -L "$runtime_root" ]] || die \
+      "GC root path exists but is not a symlink: $runtime_root"
+    rm -f "$runtime_root"
+  fi
+
+  rmdir "$gcroot_dir" >/dev/null 2>&1 || true
+}
+
 materialize_install_env() {
   write_file "$install_env_path" <<EOF
 COMMUT_HOST=$listen_host
@@ -211,7 +242,7 @@ After=network.target
 
 [Service]
 EnvironmentFile=$install_env_path
-ExecStart=${backendPackage}/bin/commut
+ExecStart=$runtime_root/backend/bin/commut
 Restart=on-failure
 RestartSec=2s
 
@@ -227,7 +258,7 @@ Description=Caddy for Commut
 After=network.target
 
 [Service]
-ExecStart=${caddy}/bin/caddy run --config $caddyfile_path
+ExecStart=$runtime_root/caddy/bin/caddy run --config $caddyfile_path
 Restart=on-failure
 RestartSec=2s
 
@@ -391,6 +422,8 @@ config_dir="$config_home/commut"
 data_dir="$data_home/commut"
 state_dir="$state_home/commut"
 systemd_user_dir="$config_home/systemd/user"
+gcroot_dir="$state_dir/gcroots"
+runtime_root="$gcroot_dir/current"
 caddyfile_path="$config_dir/Caddyfile"
 install_env_path="$config_dir/install.env"
 commut_service_path="$systemd_user_dir/commut.service"
@@ -411,6 +444,7 @@ case "$subcommand" in
       "authorized public key file does not exist: $authorized_pubkey_file"
 
     mkdir -p "$config_dir" "$data_dir" "$state_dir" "$systemd_user_dir"
+    materialize_gcroot
     materialize_install_env
     materialize_caddyfile
     materialize_commut_service
@@ -430,6 +464,7 @@ Managed files:
   $caddyfile_path
   $commut_service_path
   $caddy_service_path
+  $runtime_root
 EOF
     ;;
   uninstall)
@@ -437,6 +472,7 @@ EOF
     check_systemctl_user
     stop_and_disable_services
     rm -f "$commut_service_path" "$caddy_service_path" "$caddyfile_path" "$install_env_path"
+    remove_gcroot
 
     if (( disable_linger )); then
       maybe_disable_linger

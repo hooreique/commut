@@ -1,6 +1,7 @@
 commut-installer install
 
 Install or refresh a personal commut server.
+Run the installer as the target user, not with sudo.
 
 Usage:
   nix run {{ installFlakeRef }} -- install [options]
