@@ -209,6 +209,12 @@ export const mainFrame = ({
 
     const termTextarea = term.textarea;
     if (termTextarea !== undefined) {
+      termTextarea.setAttribute('inputmode', 'url');
+      termTextarea.setAttribute('enterkeyhint', 'enter');
+      termTextarea.setAttribute('autocapitalize', 'none');
+      termTextarea.setAttribute('autocomplete', 'off');
+      termTextarea.setAttribute('autocorrect', 'off');
+      termTextarea.spellcheck = false;
       termTextarea.addEventListener('focus', () => emitTermFocusChange(true));
       termTextarea.addEventListener('blur', () => emitTermFocusChange(false));
       emitTermFocusChange(document.activeElement === termTextarea);
