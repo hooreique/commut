@@ -5,7 +5,7 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   entry: fileURLToPath(new URL('../src/app.ts', import.meta.url)),
-  deps: { onlyBundle: ['@xterm/xterm', '@xterm/addon-webgl'] },
+  deps: { onlyBundle: ['@xterm/xterm', '@xterm/addon-webgl', 'libse'] },
   tsconfig: fileURLToPath(new URL('../tsconfig.runtime.json', import.meta.url)),
   outDir: fileURLToPath(new URL('../dist', import.meta.url)),
   sourcemap: true,
