@@ -1,5 +1,6 @@
 import { Terminal } from '@xterm/xterm';
 import { WebglAddon } from '@xterm/addon-webgl';
+import { createSe, type Jamo as SeJamo } from 'libse';
 
 import type { Dimensions, NaturalNumber } from './natural-number.pure.ts';
 
@@ -21,6 +22,9 @@ export const mainFrame = ({
   onResizeReceive,
   onVk,
   onVkComp,
+  onSeJamo,
+  onSeSpace,
+  emitTermFocusChange,
   onFocusBtnClick,
 }: {
   readonly smallInit: () => boolean;
@@ -32,6 +36,9 @@ export const mainFrame = ({
   readonly onResizeReceive: (listen: (dimensions: Dimensions) => void) => void;
   readonly onVk: (listen: (v: string) => void) => void;
   readonly onVkComp: (listen: (v: string) => void) => void;
+  readonly onSeJamo: (listen: (jamo: SeJamo) => void) => void;
+  readonly onSeSpace: (listen: () => void) => void;
+  readonly emitTermFocusChange: (focused: boolean) => void;
   readonly onFocusBtnClick: (listen: () => void) => void;
 }): Readonly<HTMLDivElement> => {
   const { emit: emitWidthMain, on: onWidthMain } = channel<boolean>();
@@ -81,16 +88,92 @@ export const mainFrame = ({
 
     term.loadAddon(new WebglAddon());
 
-    term.onData(str => {
+    let preedit = '';
+
+    const emitInput = (str: string): void => {
+      if (str.length === 0) return;
       emitSend(te.encode(str));
+    };
+
+    const commutPanel = document.createElement('div');
+    commutPanel.className = 'relative rounded size-fit overflow-hidden' as Uno;
+
+    const preeditEl = document.createElement('div');
+    preeditEl.className = 'pointer-events-none absolute z-10 whitespace-pre rounded-sm bg-[#E1E3E420] px-0.5 text-[#E1E3E4] opacity-70 ring-1 ring-[#E1E3E440]' as Uno;
+    preeditEl.hidden = true;
+
+    const updatePreeditPosition = (): void => {
+      if (preedit.length === 0) return;
+
+      const screenEl =
+        commutPanel.querySelector<HTMLElement>('.xterm-screen')
+        ?? commutPanel.querySelector<HTMLElement>('.xterm-rows')
+        ?? commutPanel;
+      const panelRect = commutPanel.getBoundingClientRect();
+      const screenRect = screenEl.getBoundingClientRect();
+      const cellWidth = screenRect.width / term.cols;
+      const cellHeight = screenRect.height / term.rows;
+      const x = Math.min(term.buffer.active.cursorX, Math.max(term.cols - 1, 0));
+      const y = Math.min(term.buffer.active.cursorY, Math.max(term.rows - 1, 0));
+      const screenStyle = getComputedStyle(screenEl);
+
+      preeditEl.style.left = `${screenRect.left - panelRect.left + x * cellWidth}px`;
+      preeditEl.style.top = `${screenRect.top - panelRect.top + y * cellHeight}px`;
+      preeditEl.style.minWidth = `${cellWidth}px`;
+      preeditEl.style.height = `${cellHeight}px`;
+      preeditEl.style.lineHeight = `${cellHeight}px`;
+      preeditEl.style.fontFamily = screenStyle.fontFamily;
+      preeditEl.style.fontSize = screenStyle.fontSize;
+    };
+
+    const setPreedit = (next: string): void => {
+      preedit = next;
+      preeditEl.innerText = next;
+      preeditEl.hidden = next.length === 0;
+      requestAnimationFrame(updatePreeditPosition);
+    };
+
+    const se = createSe(outbound => {
+      if (outbound.flushed) {
+        setPreedit('');
+        emitInput(outbound.character);
+        return;
+      }
+
+      setPreedit(outbound.preedit);
+    });
+
+    const flushSe = (): void => se.flush();
+
+    const handleInput = (str: string): void => {
+      if (str === '\x7f' && se.backspace()) {
+        term.focus();
+        return;
+      }
+
+      flushSe();
+      term.input(str);
+    };
+
+    term.onData(str => {
+      if (str === '\x7f' && se.backspace()) return;
+      flushSe();
+      emitInput(str);
     });
 
     onReceive(data => {
-      term.write(data);
+      term.write(data, updatePreeditPosition);
     });
 
-    onVk(v => term.input(v));
-    onVkComp(v => term.input(v));
+    onVk(handleInput);
+    onVkComp(handleInput);
+    onSeJamo(jamo => {
+      se.inbound(jamo);
+    });
+    onSeSpace(() => {
+      flushSe();
+      emitInput(' ');
+    });
 
     onFocusBtnClick(() => term.focus());
 
@@ -112,16 +195,31 @@ export const mainFrame = ({
       emitResizeSend({ cols, rows });
     });
 
-    onResizeReceive(({ cols, rows }) => term.resize(cols, rows));
+    term.onCursorMove(updatePreeditPosition);
+    term.onRender(() => updatePreeditPosition());
+    term.onWriteParsed(updatePreeditPosition);
 
-    const commutPanel = document.createElement('div');
-    commutPanel.className = 'rounded size-fit overflow-hidden' as Uno;
+    onResizeReceive(({ cols, rows }) => {
+      term.resize(cols, rows);
+      updatePreeditPosition();
+    });
 
     term.open(commutPanel);
+    commutPanel.appendChild(preeditEl);
+
+    const termTextarea = term.textarea;
+    if (termTextarea !== undefined) {
+      termTextarea.addEventListener('focus', () => emitTermFocusChange(true));
+      termTextarea.addEventListener('blur', () => emitTermFocusChange(false));
+      emitTermFocusChange(document.activeElement === termTextarea);
+    } else {
+      emitTermFocusChange(false);
+    }
 
     it.replaceChildren(commutPanel);
 
     term.focus();
+    emitTermFocusChange(termTextarea !== undefined && document.activeElement === termTextarea);
   });
 
   it.replaceChildren(welcomePanel({

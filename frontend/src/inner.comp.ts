@@ -143,7 +143,7 @@ export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
     const copyBtnEl = document.createElement('button');
     copyBtnEl.className = 'cursor-pointer hover:underline p-0 border-none focus:outline-none' as Uno;
     copyBtnEl.autofocus = true;
-    copyBtnEl.innerText = '[␣] to copy';
+    copyBtnEl.innerText = '[·] to copy';
     copyBtnEl.addEventListener('click', copy);
 
     menuEl.replaceChildren(closeBtnEl, copyBtnEl);

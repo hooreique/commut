@@ -1,3 +1,5 @@
+import type { Jamo as SeJamo } from 'libse';
+
 import type { Dimensions } from './natural-number.pure.ts';
 
 import { channel } from './channel.pure.ts';
@@ -35,7 +37,10 @@ export const rack = ({
 }): Readonly<HTMLDivElement> => {
   const { emit: emitBell, on: onBell } = channel<void>();
   const { emit: emitVk, on: onVk } = channel<string>();
+  const { emit: emitSeJamo, on: onSeJamo } = channel<SeJamo>();
+  const { emit: emitSeSpace, on: onSeSpace } = channel<void>();
   const { emit: emitFocusBtnClick, on: onFocusBtnClick } = channel<void>();
+  const { emit: emitTermFocusChange, on: onTermFocusChange } = channel<boolean>();
   const { emit: emitHealthyHead, on: onHealthyHead } = channel<boolean>();
 
   const it = document.createElement('div');
@@ -44,6 +49,9 @@ export const rack = ({
   const vkEl = virtualKbd({
     emitVk,
     emitVkPartial,
+    emitSeJamo,
+    emitSeSpace,
+    onTermFocusChange,
     emitFocusBtnClick,
   });
 
@@ -74,6 +82,9 @@ export const rack = ({
       onResizeReceive,
       onVk,
       onVkComp,
+      onSeJamo,
+      onSeSpace,
+      emitTermFocusChange,
       onFocusBtnClick,
     }));
 

@@ -1,5 +1,8 @@
+import type { Jamo as SeJamo } from 'libse';
+
 import type { VirtualKbd, VirtualKbdPartial } from './virtual-kbd.pure.ts';
 import { VK } from './virtual-kbd.pure.ts';
+import { seKbd } from './se-kbd.comp.ts';
 
 
 const vkBtn = ({ vk, emitVk, emitVkPartial }: {
@@ -45,11 +48,20 @@ const vkRow = ({ vks, emitVk, emitVkPartial }: {
   return it;
 };
 
-export const virtualKbd = ({ emitVk, emitVkPartial, emitFocusBtnClick }: {
+export const virtualKbd = ({ emitVk, emitVkPartial, emitSeJamo, emitSeSpace, onTermFocusChange, emitFocusBtnClick }: {
   readonly emitVk: (v: string) => void;
   readonly emitVkPartial: (partial: VirtualKbdPartial) => void;
+  readonly emitSeJamo: (jamo: SeJamo) => void;
+  readonly emitSeSpace: () => void;
+  readonly onTermFocusChange: (listen: (focused: boolean) => void) => void;
   readonly emitFocusBtnClick: () => void;
 }): Readonly<HTMLDivElement> => {
+  const seKbdEl = seKbd({
+    emitSeJamo,
+    emitSeSpace,
+    onTermFocusChange,
+  });
+
   const r1 = vkRow({
     vks: [VK.ESC, VK.LEFT, VK.DOWN, VK.UP, VK.RIGHT, VK.CR],
     emitVk,
@@ -95,7 +107,7 @@ export const virtualKbd = ({ emitVk, emitVkPartial, emitFocusBtnClick }: {
   const it = document.createElement('div');
   it.className = 'grid gap-4' as Uno;
 
-  it.replaceChildren(r1, r2, r3, r4);
+  it.replaceChildren(seKbdEl, r1, r2, r3, r4);
 
   return it;
 };
