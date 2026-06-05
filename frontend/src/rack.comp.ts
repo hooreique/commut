@@ -38,8 +38,9 @@ export const rack = ({
   const { emit: emitBell, on: onBell } = channel<void>();
   const { emit: emitVk, on: onVk } = channel<string>();
   const { emit: emitSeJamo, on: onSeJamo } = channel<SeJamo>();
-  const { emit: emitSeFlush, on: onSeFlush } = channel<void>();
+  const { emit: emitSeSpace, on: onSeSpace } = channel<void>();
   const { emit: emitFocusBtnClick, on: onFocusBtnClick } = channel<void>();
+  const { emit: emitTermFocusChange, on: onTermFocusChange } = channel<boolean>();
   const { emit: emitHealthyHead, on: onHealthyHead } = channel<boolean>();
 
   const it = document.createElement('div');
@@ -49,7 +50,8 @@ export const rack = ({
     emitVk,
     emitVkPartial,
     emitSeJamo,
-    emitSeFlush,
+    emitSeSpace,
+    onTermFocusChange,
     emitFocusBtnClick,
   });
 
@@ -81,7 +83,8 @@ export const rack = ({
       onVk,
       onVkComp,
       onSeJamo,
-      onSeFlush,
+      onSeSpace,
+      emitTermFocusChange,
       onFocusBtnClick,
     }));
 

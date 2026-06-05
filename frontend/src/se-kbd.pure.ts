@@ -60,7 +60,7 @@ export type SeJamoName =
 export type SeKey = Readonly<{
   lower: SeJamoName;
   upper?: SeJamoName;
-  flushOnLongPress?: boolean;
+  spaceOnLongPress?: boolean;
 }>;
 
 export type SeKeyRow = Readonly<{
@@ -71,8 +71,8 @@ export type SeKeyRow = Readonly<{
 const key = (
   lower: SeJamoName,
   upper?: SeJamoName,
-  flushOnLongPress = false,
-): SeKey => ({ lower, upper, flushOnLongPress });
+  spaceOnLongPress = false,
+): SeKey => ({ lower, upper, spaceOnLongPress });
 
 /**
  * Rows mirror frontend/se-layout.txt. The visible lower key is emitted on tap;

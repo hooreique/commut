@@ -9,6 +9,7 @@ const lowerLabels = (rowIndex: number): readonly string[] =>
 
 const upperLabels = (rowIndex: number): readonly string[] =>
   SE_KEY_ROWS[rowIndex].keys.map(key => {
+    if (key.spaceOnLongPress === true) return '·';
     if (key.upper === undefined) return '';
     return key.upper.startsWith('_') ? key.upper.substring(1) : key.upper;
   });
@@ -19,16 +20,16 @@ test('se keyboard lower labels match se-layout.txt', () => {
   assert.deepEqual(lowerLabels(2), ['ㄹ', 'ㅅ', 'ㄷ', 'ㅁ', 'ㄴ', 'ㅇ', 'ㄱ', 'ㅈ', 'ㅂ', 'ㅎ']);
 });
 
-test('se keyboard long-press labels match se-layout.txt upper keys', () => {
+test('se keyboard long-press labels match upper keys', () => {
   assert.deepEqual(upperLabels(0), ['ㄲ', 'ㅈ', 'ㄶ', 'ㅄ', 'ㅍ', 'ㅌ', 'ㄺ', 'ㄻ', 'ㅊ', 'ㅋ']);
   assert.deepEqual(upperLabels(1), ['ㅝ', 'ㅠ', 'ㅢ', 'ㅛ', 'ㅘ', 'ㅑ', 'ㅕ', 'ㅒ', 'ㅖ']);
-  assert.deepEqual(upperLabels(2), ['ㅌ', 'ㅆ', 'ㄸ', 'ㅍ', 'ㅊ', '', 'ㄲ', 'ㅉ', 'ㅃ', 'ㅋ']);
+  assert.deepEqual(upperLabels(2), ['ㅌ', 'ㅆ', 'ㄸ', 'ㅍ', 'ㅊ', '·', 'ㄲ', 'ㅉ', 'ㅃ', 'ㅋ']);
 });
 
-test('se keyboard flushes on long-pressing initial ieung', () => {
+test('se keyboard emits space on long-pressing initial ieung', () => {
   const choIeung = SE_KEY_ROWS[2].keys[5];
 
   assert.equal(choIeung.lower, 'ㅇ');
   assert.equal(choIeung.upper, undefined);
-  assert.equal(choIeung.flushOnLongPress, true);
+  assert.equal(choIeung.spaceOnLongPress, true);
 });

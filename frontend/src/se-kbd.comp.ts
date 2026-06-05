@@ -6,7 +6,8 @@ import { SE_KEY_ROWS, seKeyLabel } from './se-kbd.pure.ts';
 
 const LONG_PRESS_MS = 420;
 const POP_HIDE_MS = 120;
-const SE_KBD_VISIBLE_MEDIA = '(min-height: 800px)';
+const SE_KBD_GRID_COLUMNS = 20;
+const SE_KBD_KEY_COLUMNS = 2;
 
 const toSeJamo = (name: SeJamoName): SeJamo => Jamo[name as keyof typeof Jamo] as SeJamo;
 
@@ -38,19 +39,23 @@ const showKeyPop = (source: HTMLElement, label: string): (() => void) => {
   };
 };
 
-const seBtn = ({ seKey, emitSeJamo, emitSeFlush, emitFocusBtnClick }: {
+const longPressLabel = (seKey: SeKey): string =>
+  seKey.upper === undefined
+    ? (seKey.spaceOnLongPress === true ? '·' : '')
+    : seKeyLabel(seKey.upper);
+
+const seBtn = ({ seKey, emitSeJamo, emitSeSpace }: {
   readonly seKey: SeKey;
   readonly emitSeJamo: (jamo: SeJamo) => void;
-  readonly emitSeFlush: () => void;
-  readonly emitFocusBtnClick: () => void;
+  readonly emitSeSpace: () => void;
 }): Readonly<HTMLButtonElement> => {
   const it = document.createElement('button');
   it.type = 'button';
-  it.className = 'relative grid h-11 w-9 shrink-0 touch-none select-none place-items-center rounded border border-gray-500 bg-[#303641] p-0 text-center cursor-pointer hover:border-gray-400 active:bg-[#3D4455]' as Uno;
+  it.className = 'relative grid h-11 w-full max-w-9 min-w-0 touch-none select-none place-items-center justify-self-center overflow-hidden rounded border border-gray-500 bg-[#303641] p-0 text-center cursor-pointer hover:border-gray-400 active:bg-[#3D4455]' as Uno;
 
   const upperEl = document.createElement('span');
   upperEl.className = 'absolute top-1 text-[0.65rem] leading-none text-[#9DA6B8]' as Uno;
-  upperEl.innerText = seKey.upper === undefined ? '' : seKeyLabel(seKey.upper);
+  upperEl.innerText = longPressLabel(seKey);
 
   const lowerEl = document.createElement('kbd');
   lowerEl.className = 'pt-2 text-lg leading-none font-inherit' as Uno;
@@ -75,13 +80,11 @@ const seBtn = ({ seKey, emitSeJamo, emitSeFlush, emitFocusBtnClick }: {
   const emit = (jamo: SeJamoName): void => {
     emitted = true;
     emitSeJamo(toSeJamo(jamo));
-    emitFocusBtnClick();
   };
 
-  const flush = (): void => {
+  const space = (): void => {
     emitted = true;
-    emitSeFlush();
-    emitFocusBtnClick();
+    emitSeSpace();
   };
 
   const clearTimer = (): void => {
@@ -99,7 +102,7 @@ const seBtn = ({ seKey, emitSeJamo, emitSeFlush, emitFocusBtnClick }: {
     it.setPointerCapture(ev.pointerId);
 
     const upper = seKey.upper;
-    if (upper !== undefined || seKey.flushOnLongPress === true) {
+    if (upper !== undefined || seKey.spaceOnLongPress === true) {
       timer = window.setTimeout(() => {
         timer = undefined;
         if (upper !== undefined) {
@@ -108,8 +111,8 @@ const seBtn = ({ seKey, emitSeJamo, emitSeFlush, emitFocusBtnClick }: {
           return;
         }
 
-        showPop('확정');
-        flush();
+        showPop('Space');
+        space();
       }, LONG_PRESS_MS);
     }
   });
@@ -139,44 +142,50 @@ const seBtn = ({ seKey, emitSeJamo, emitSeFlush, emitFocusBtnClick }: {
   return it;
 };
 
-const seRow = ({ keys, emitSeJamo, emitSeFlush, emitFocusBtnClick }: {
+const seRow = ({ keys, emitSeJamo, emitSeSpace }: {
   readonly keys: readonly SeKey[];
   readonly emitSeJamo: (jamo: SeJamo) => void;
-  readonly emitSeFlush: () => void;
-  readonly emitFocusBtnClick: () => void;
+  readonly emitSeSpace: () => void;
 }): Readonly<HTMLDivElement> => {
   const it = document.createElement('div');
-  it.className = 'flex w-max gap-1 justify-center' as Uno;
-  it.replaceChildren(...keys.map(seKey => seBtn({
-    seKey,
-    emitSeJamo,
-    emitSeFlush,
-    emitFocusBtnClick,
-  })));
+  it.className = 'grid w-full gap-1 justify-items-center' as Uno;
+  it.style.gridTemplateColumns = `repeat(${SE_KBD_GRID_COLUMNS}, minmax(0, 1fr))`;
+
+  const startColumn = Math.floor((SE_KBD_GRID_COLUMNS - keys.length * SE_KBD_KEY_COLUMNS) / 2) + 1;
+  it.replaceChildren(...keys.map((seKey, index) => {
+    const btn = seBtn({
+      seKey,
+      emitSeJamo,
+      emitSeSpace,
+    });
+
+    btn.style.gridColumn = index === 0
+      ? `${startColumn} / span ${SE_KBD_KEY_COLUMNS}`
+      : `span ${SE_KBD_KEY_COLUMNS}`;
+
+    return btn;
+  }));
 
   return it;
 };
 
-export const seKbd = ({ emitSeJamo, emitSeFlush, emitFocusBtnClick }: {
+export const seKbd = ({ emitSeJamo, emitSeSpace, onTermFocusChange }: {
   readonly emitSeJamo: (jamo: SeJamo) => void;
-  readonly emitSeFlush: () => void;
-  readonly emitFocusBtnClick: () => void;
+  readonly emitSeSpace: () => void;
+  readonly onTermFocusChange: (listen: (focused: boolean) => void) => void;
 }): Readonly<HTMLDivElement> => {
   const it = document.createElement('div');
-  it.className = 'grid max-w-[calc(100vw-1rem)] gap-2 overflow-x-auto px-1 pb-1 justify-items-center' as Uno;
+  it.className = 'grid w-full justify-self-center box-border gap-2 overflow-hidden px-1 pb-1 justify-items-stretch' as Uno;
+  it.style.maxWidth = 'min(28rem, calc(100vw - 1rem))';
 
-  const visibleMedia = window.matchMedia(SE_KBD_VISIBLE_MEDIA);
-  const updateVisibility = (): void => {
-    it.hidden = !visibleMedia.matches;
-  };
-  visibleMedia.addEventListener('change', updateVisibility);
-  updateVisibility();
+  onTermFocusChange(focused => {
+    it.hidden = focused;
+  });
 
   it.replaceChildren(...SE_KEY_ROWS.map(row => seRow({
     keys: row.keys,
     emitSeJamo,
-    emitSeFlush,
-    emitFocusBtnClick,
+    emitSeSpace,
   })));
 
   return it;

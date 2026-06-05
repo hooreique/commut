@@ -23,7 +23,8 @@ export const mainFrame = ({
   onVk,
   onVkComp,
   onSeJamo,
-  onSeFlush,
+  onSeSpace,
+  emitTermFocusChange,
   onFocusBtnClick,
 }: {
   readonly smallInit: () => boolean;
@@ -36,7 +37,8 @@ export const mainFrame = ({
   readonly onVk: (listen: (v: string) => void) => void;
   readonly onVkComp: (listen: (v: string) => void) => void;
   readonly onSeJamo: (listen: (jamo: SeJamo) => void) => void;
-  readonly onSeFlush: (listen: () => void) => void;
+  readonly onSeSpace: (listen: () => void) => void;
+  readonly emitTermFocusChange: (focused: boolean) => void;
   readonly onFocusBtnClick: (listen: () => void) => void;
 }): Readonly<HTMLDivElement> => {
   const { emit: emitWidthMain, on: onWidthMain } = channel<boolean>();
@@ -167,11 +169,10 @@ export const mainFrame = ({
     onVkComp(handleInput);
     onSeJamo(jamo => {
       se.inbound(jamo);
-      term.focus();
     });
-    onSeFlush(() => {
+    onSeSpace(() => {
       flushSe();
-      term.focus();
+      emitInput(' ');
     });
 
     onFocusBtnClick(() => term.focus());
@@ -206,9 +207,19 @@ export const mainFrame = ({
     term.open(commutPanel);
     commutPanel.appendChild(preeditEl);
 
+    const termTextarea = term.textarea;
+    if (termTextarea !== undefined) {
+      termTextarea.addEventListener('focus', () => emitTermFocusChange(true));
+      termTextarea.addEventListener('blur', () => emitTermFocusChange(false));
+      emitTermFocusChange(document.activeElement === termTextarea);
+    } else {
+      emitTermFocusChange(false);
+    }
+
     it.replaceChildren(commutPanel);
 
     term.focus();
+    emitTermFocusChange(termTextarea !== undefined && document.activeElement === termTextarea);
   });
 
   it.replaceChildren(welcomePanel({

@@ -48,17 +48,18 @@ const vkRow = ({ vks, emitVk, emitVkPartial }: {
   return it;
 };
 
-export const virtualKbd = ({ emitVk, emitVkPartial, emitSeJamo, emitSeFlush, emitFocusBtnClick }: {
+export const virtualKbd = ({ emitVk, emitVkPartial, emitSeJamo, emitSeSpace, onTermFocusChange, emitFocusBtnClick }: {
   readonly emitVk: (v: string) => void;
   readonly emitVkPartial: (partial: VirtualKbdPartial) => void;
   readonly emitSeJamo: (jamo: SeJamo) => void;
-  readonly emitSeFlush: () => void;
+  readonly emitSeSpace: () => void;
+  readonly onTermFocusChange: (listen: (focused: boolean) => void) => void;
   readonly emitFocusBtnClick: () => void;
 }): Readonly<HTMLDivElement> => {
   const seKbdEl = seKbd({
     emitSeJamo,
-    emitSeFlush,
-    emitFocusBtnClick,
+    emitSeSpace,
+    onTermFocusChange,
   });
 
   const r1 = vkRow({
