@@ -147,7 +147,6 @@ export const mainFrame = ({
 
     const handleInput = (str: string): void => {
       if (str === '\x7f' && se.backspace()) {
-        term.focus();
         return;
       }
 
