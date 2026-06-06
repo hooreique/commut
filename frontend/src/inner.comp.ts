@@ -180,7 +180,11 @@ export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
     input.type = 'text';
     input.maxLength = 1;
     input.pattern = '[a-zA-Z]';
+    input.inputMode = 'text';
+    input.setAttribute('autocapitalize', 'none');
     input.autocomplete = 'off';
+    input.setAttribute('autocorrect', 'off');
+    input.spellcheck = false;
     input.placeholder = 'Listening…';
     input.size = 10;
     input.className = 'p-0 border-none focus:outline-none' as Uno;
