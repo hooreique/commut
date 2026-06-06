@@ -4,7 +4,7 @@ import type { SeJamoName, SeKey } from './se-kbd.pure.ts';
 import { SE_KEY_ROWS, seKeyLabel } from './se-kbd.pure.ts';
 
 
-const LONG_PRESS_MS = 420;
+const LONG_PRESS_MS = 200;
 const POP_HIDE_MS = 120;
 const SE_KBD_GRID_COLUMNS = 20;
 const SE_KBD_KEY_COLUMNS = 2;
