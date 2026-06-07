@@ -1,6 +1,6 @@
 import { Terminal } from '@xterm/xterm';
 import { WebglAddon } from '@xterm/addon-webgl';
-import { createSe, type Jamo as SeJamo } from 'libse';
+import { createSe, type Jamo } from 'libse';
 
 import type { Dimensions, NaturalNumber } from './natural-number.pure.ts';
 
@@ -22,7 +22,7 @@ export const mainFrame = ({
   onResizeReceive,
   onVk,
   onVkComp,
-  onSeJamo,
+  onSe,
   onSeSpace,
   emitTermFocusChange,
   onFocusBtnClick,
@@ -36,7 +36,7 @@ export const mainFrame = ({
   readonly onResizeReceive: (listen: (dimensions: Dimensions) => void) => void;
   readonly onVk: (listen: (v: string) => void) => void;
   readonly onVkComp: (listen: (v: string) => void) => void;
-  readonly onSeJamo: (listen: (jamo: SeJamo) => void) => void;
+  readonly onSe: (listen: (jamo: Jamo) => void) => void;
   readonly onSeSpace: (listen: () => void) => void;
   readonly emitTermFocusChange: (focused: boolean) => void;
   readonly onFocusBtnClick: (listen: () => void) => void;
@@ -166,7 +166,7 @@ export const mainFrame = ({
 
     onVk(handleInput);
     onVkComp(handleInput);
-    onSeJamo(jamo => {
+    onSe(jamo => {
       se.inbound(jamo);
     });
     onSeSpace(() => {

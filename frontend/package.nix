@@ -34,7 +34,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       ;
     pnpm = pnpm;
     fetcherVersion = 3;
-    hash = "sha256-gyVlosPiW22XjWrP1Z4h4D1QQfhQtb7ThdY8jh40kj8=";
+    hash = "sha256-q5T2zjVP1QEETjVg3EvS/glHmLoth6cMqQq1KZnagKA=";
   };
 
   preBuild = ''

@@ -1,65 +1,10 @@
-export type SeJamoName =
-  | '_ㄱ'
-  | '_ㄲ'
-  | '_ㄴ'
-  | '_ㄶ'
-  | '_ㄷ'
-  | '_ㄺ'
-  | '_ㄻ'
-  | '_ㄹ'
-  | '_ㅁ'
-  | '_ㅂ'
-  | '_ㅄ'
-  | '_ㅅ'
-  | '_ㅆ'
-  | '_ㅇ'
-  | '_ㅈ'
-  | '_ㅊ'
-  | '_ㅋ'
-  | '_ㅌ'
-  | '_ㅍ'
-  | '_ㅎ'
-  | 'ㄱ'
-  | 'ㄲ'
-  | 'ㄴ'
-  | 'ㄷ'
-  | 'ㄸ'
-  | 'ㄹ'
-  | 'ㅁ'
-  | 'ㅂ'
-  | 'ㅃ'
-  | 'ㅅ'
-  | 'ㅆ'
-  | 'ㅇ'
-  | 'ㅈ'
-  | 'ㅉ'
-  | 'ㅊ'
-  | 'ㅋ'
-  | 'ㅌ'
-  | 'ㅍ'
-  | 'ㅎ'
-  | 'ㅏ'
-  | 'ㅐ'
-  | 'ㅑ'
-  | 'ㅒ'
-  | 'ㅓ'
-  | 'ㅔ'
-  | 'ㅕ'
-  | 'ㅖ'
-  | 'ㅗ'
-  | 'ㅘ'
-  | 'ㅙ'
-  | 'ㅛ'
-  | 'ㅜ'
-  | 'ㅝ'
-  | 'ㅠ'
-  | 'ㅡ'
-  | 'ㅢ'
-  | 'ㅣ';
+import type { jamo } from 'libse';
+
+export type JamoName = keyof typeof jamo;
 
 export type SeKey = Readonly<{
-  lower: SeJamoName;
-  upper?: SeJamoName;
+  lower: JamoName;
+  upper?: JamoName;
   spaceOnLongPress?: boolean;
 }>;
 
@@ -69,8 +14,8 @@ export type SeKeyRow = Readonly<{
 }>;
 
 const key = (
-  lower: SeJamoName,
-  upper?: SeJamoName,
+  lower: JamoName,
+  upper?: JamoName,
   spaceOnLongPress = false,
 ): SeKey => ({ lower, upper, spaceOnLongPress });
 
@@ -124,6 +69,3 @@ export const SE_KEY_ROWS: readonly SeKeyRow[] = Object.freeze([
     ]),
   },
 ]);
-
-export const seKeyLabel = (jamo: SeJamoName): string =>
-  jamo.startsWith('_') ? jamo.substring(1) : jamo;

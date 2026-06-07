@@ -1,7 +1,7 @@
-import { Jamo, type Jamo as SeJamo } from 'libse';
+import { jamo, type Jamo } from 'libse';
 
-import type { SeJamoName, SeKey } from './se-kbd.pure.ts';
-import { SE_KEY_ROWS, seKeyLabel } from './se-kbd.pure.ts';
+import type { JamoName, SeKey } from './se-kbd.pure.ts';
+import { SE_KEY_ROWS } from './se-kbd.pure.ts';
 
 
 const LONG_PRESS_MS = 200;
@@ -9,7 +9,7 @@ const POP_HIDE_MS = 120;
 const SE_KBD_GRID_COLUMNS = 20;
 const SE_KBD_KEY_COLUMNS = 2;
 
-const toSeJamo = (name: SeJamoName): SeJamo => Jamo[name as keyof typeof Jamo] as SeJamo;
+const seKeyLabel = (name: JamoName): string => jamo[name].label;
 
 const showKeyPop = (source: HTMLElement, label: string): (() => void) => {
   let closed = false;
@@ -44,9 +44,9 @@ const longPressLabel = (seKey: SeKey): string =>
     ? (seKey.spaceOnLongPress === true ? '·' : '')
     : seKeyLabel(seKey.upper);
 
-const seBtn = ({ seKey, emitSeJamo, emitSeSpace }: {
+const seBtn = ({ seKey, emitSe, emitSeSpace }: {
   readonly seKey: SeKey;
-  readonly emitSeJamo: (jamo: SeJamo) => void;
+  readonly emitSe: (jamo: Jamo) => void;
   readonly emitSeSpace: () => void;
 }): Readonly<HTMLButtonElement> => {
   const it = document.createElement('button');
@@ -77,9 +77,9 @@ const seBtn = ({ seKey, emitSeJamo, emitSeSpace }: {
     closePop = showKeyPop(it, label);
   };
 
-  const emit = (jamo: SeJamoName): void => {
+  const emit = (name: JamoName): void => {
     emitted = true;
-    emitSeJamo(toSeJamo(jamo));
+    emitSe(jamo[name]);
   };
 
   const space = (): void => {
@@ -142,9 +142,9 @@ const seBtn = ({ seKey, emitSeJamo, emitSeSpace }: {
   return it;
 };
 
-const seRow = ({ keys, emitSeJamo, emitSeSpace }: {
+const seRow = ({ keys, emitSe, emitSeSpace }: {
   readonly keys: readonly SeKey[];
-  readonly emitSeJamo: (jamo: SeJamo) => void;
+  readonly emitSe: (jamo: Jamo) => void;
   readonly emitSeSpace: () => void;
 }): Readonly<HTMLDivElement> => {
   const it = document.createElement('div');
@@ -155,7 +155,7 @@ const seRow = ({ keys, emitSeJamo, emitSeSpace }: {
   it.replaceChildren(...keys.map((seKey, index) => {
     const btn = seBtn({
       seKey,
-      emitSeJamo,
+      emitSe,
       emitSeSpace,
     });
 
@@ -169,8 +169,8 @@ const seRow = ({ keys, emitSeJamo, emitSeSpace }: {
   return it;
 };
 
-export const seKbd = ({ emitSeJamo, emitSeSpace, onTermFocusChange }: {
-  readonly emitSeJamo: (jamo: SeJamo) => void;
+export const seKbd = ({ emitSe, emitSeSpace, onTermFocusChange }: {
+  readonly emitSe: (jamo: Jamo) => void;
   readonly emitSeSpace: () => void;
   readonly onTermFocusChange: (listen: (focused: boolean) => void) => void;
 }): Readonly<HTMLDivElement> => {
@@ -184,7 +184,7 @@ export const seKbd = ({ emitSeJamo, emitSeSpace, onTermFocusChange }: {
 
   it.replaceChildren(...SE_KEY_ROWS.map(row => seRow({
     keys: row.keys,
-    emitSeJamo,
+    emitSe,
     emitSeSpace,
   })));
 

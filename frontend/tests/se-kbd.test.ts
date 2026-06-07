@@ -4,14 +4,16 @@ import test from 'node:test';
 import { SE_KEY_ROWS } from '../src/se-kbd.pure.ts';
 
 
+const keyLabel = (name: string): string => name.startsWith('_') ? name.substring(1) : name;
+
 const lowerLabels = (rowIndex: number): readonly string[] =>
-  SE_KEY_ROWS[rowIndex].keys.map(key => key.lower.startsWith('_') ? key.lower.substring(1) : key.lower);
+  SE_KEY_ROWS[rowIndex].keys.map(key => keyLabel(key.lower));
 
 const upperLabels = (rowIndex: number): readonly string[] =>
   SE_KEY_ROWS[rowIndex].keys.map(key => {
     if (key.spaceOnLongPress === true) return '·';
     if (key.upper === undefined) return '';
-    return key.upper.startsWith('_') ? key.upper.substring(1) : key.upper;
+    return keyLabel(key.upper);
   });
 
 test('se keyboard lower labels match se-layout.txt', () => {

@@ -22,7 +22,7 @@ importers:
         version: 6.0.0
       libse:
         specifier: github:hooreique/libse
-        version: https://codeload.github.com/hooreique/libse/tar.gz/2c8257c2b4655c777d73f73ca5a37180c33d3d32
+        version: https://codeload.github.com/hooreique/libse/tar.gz/cd711aa7785de99598a5b66a4aa1a4c80e75e1e8
       tsdown:
         specifier: 0.22.0
         version: 0.22.0(typescript@6.0.3)
@@ -530,8 +530,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  libse@https://codeload.github.com/hooreique/libse/tar.gz/2c8257c2b4655c777d73f73ca5a37180c33d3d32:
-    resolution: {gitHosted: true, integrity: sha512-ne13mpOvFjseQ7OnQ1YvVnpCwERwBUecW1KvwujVCfnpIHQ0BGgbEgxR1eiGM+SOw79eh3C/37aGS0Nz3q7aeQ==, tarball: https://codeload.github.com/hooreique/libse/tar.gz/2c8257c2b4655c777d73f73ca5a37180c33d3d32}
+  libse@https://codeload.github.com/hooreique/libse/tar.gz/cd711aa7785de99598a5b66a4aa1a4c80e75e1e8:
+    resolution: {gitHosted: true, integrity: sha512-8++8lcfP3i5aCNZOhXw16snylcpDDYYmHXMK7E9qvpYvId7V+cQhfyj9Fz9CT355TQ2G0H2fCtHBfJ3xDLoleg==, tarball: https://codeload.github.com/hooreique/libse/tar.gz/cd711aa7785de99598a5b66a4aa1a4c80e75e1e8}
     version: 0.1.0
 
   lightningcss-android-arm64@1.32.0:
@@ -1286,7 +1286,7 @@ snapshots:
 
   jsesc@3.1.0: {}
 
-  libse@https://codeload.github.com/hooreique/libse/tar.gz/2c8257c2b4655c777d73f73ca5a37180c33d3d32: {}
+  libse@https://codeload.github.com/hooreique/libse/tar.gz/cd711aa7785de99598a5b66a4aa1a4c80e75e1e8: {}
 
   lightningcss-android-arm64@1.32.0:
     optional: true

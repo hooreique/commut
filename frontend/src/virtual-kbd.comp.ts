@@ -1,4 +1,4 @@
-import type { Jamo as SeJamo } from 'libse';
+import type { Jamo } from 'libse';
 
 import type { VirtualKbd, VirtualKbdPartial } from './virtual-kbd.pure.ts';
 import { VK } from './virtual-kbd.pure.ts';
@@ -48,16 +48,16 @@ const vkRow = ({ vks, emitVk, emitVkPartial }: {
   return it;
 };
 
-export const virtualKbd = ({ emitVk, emitVkPartial, emitSeJamo, emitSeSpace, onTermFocusChange, emitFocusBtnClick }: {
+export const virtualKbd = ({ emitVk, emitVkPartial, emitSe, emitSeSpace, onTermFocusChange, emitFocusBtnClick }: {
   readonly emitVk: (v: string) => void;
   readonly emitVkPartial: (partial: VirtualKbdPartial) => void;
-  readonly emitSeJamo: (jamo: SeJamo) => void;
+  readonly emitSe: (jamo: Jamo) => void;
   readonly emitSeSpace: () => void;
   readonly onTermFocusChange: (listen: (focused: boolean) => void) => void;
   readonly emitFocusBtnClick: () => void;
 }): Readonly<HTMLDivElement> => {
   const seKbdEl = seKbd({
-    emitSeJamo,
+    emitSe,
     emitSeSpace,
     onTermFocusChange,
   });
