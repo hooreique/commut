@@ -24,7 +24,6 @@ export const mainFrame = ({
   onVkComp,
   onSe,
   onSeSpace,
-  emitTermFocusChange,
   onFocusBtnClick,
 }: {
   readonly smallInit: () => boolean;
@@ -38,7 +37,6 @@ export const mainFrame = ({
   readonly onVkComp: (listen: (v: string) => void) => void;
   readonly onSe: (listen: (jamo: Jamo) => void) => void;
   readonly onSeSpace: (listen: () => void) => void;
-  readonly emitTermFocusChange: (focused: boolean) => void;
   readonly onFocusBtnClick: (listen: () => void) => void;
 }): Readonly<HTMLDivElement> => {
   const { emit: emitWidthMain, on: onWidthMain } = channel<boolean>();
@@ -214,17 +212,11 @@ export const mainFrame = ({
       termTextarea.setAttribute('autocomplete', 'off');
       termTextarea.setAttribute('autocorrect', 'off');
       termTextarea.spellcheck = false;
-      termTextarea.addEventListener('focus', () => emitTermFocusChange(true));
-      termTextarea.addEventListener('blur', () => emitTermFocusChange(false));
-      emitTermFocusChange(document.activeElement === termTextarea);
-    } else {
-      emitTermFocusChange(false);
     }
 
     it.replaceChildren(commutPanel);
 
     term.focus();
-    emitTermFocusChange(termTextarea !== undefined && document.activeElement === termTextarea);
   });
 
   it.replaceChildren(welcomePanel({

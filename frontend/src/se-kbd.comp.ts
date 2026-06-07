@@ -148,8 +148,7 @@ const seRow = ({ keys, emitSe, emitSeSpace }: {
   readonly emitSeSpace: () => void;
 }): Readonly<HTMLDivElement> => {
   const it = document.createElement('div');
-  it.className = 'grid w-full gap-1 justify-items-center' as Uno;
-  it.style.gridTemplateColumns = `repeat(${SE_KBD_GRID_COLUMNS}, minmax(0, 1fr))`;
+  it.className = 'grid grid-cols-20 w-full gap-1 justify-items-center' as Uno;
 
   const startColumn = Math.floor((SE_KBD_GRID_COLUMNS - keys.length * SE_KBD_KEY_COLUMNS) / 2) + 1;
   it.replaceChildren(...keys.map((seKey, index) => {
@@ -169,18 +168,12 @@ const seRow = ({ keys, emitSe, emitSeSpace }: {
   return it;
 };
 
-export const seKbd = ({ emitSe, emitSeSpace, onTermFocusChange }: {
+export const seKbd = ({ emitSe, emitSeSpace }: {
   readonly emitSe: (jamo: Jamo) => void;
   readonly emitSeSpace: () => void;
-  readonly onTermFocusChange: (listen: (focused: boolean) => void) => void;
 }): Readonly<HTMLDivElement> => {
   const it = document.createElement('div');
-  it.className = 'grid w-full justify-self-center box-border gap-2 overflow-hidden px-1 pb-1 justify-items-stretch' as Uno;
-  it.style.maxWidth = 'min(28rem, calc(100vw - 1rem))';
-
-  onTermFocusChange(focused => {
-    it.hidden = focused;
-  });
+  it.className = 'grid w-full max-w-[min(28rem,calc(100vw-1rem))] justify-self-center box-border gap-2 overflow-hidden px-1 pb-1 justify-items-stretch' as Uno;
 
   it.replaceChildren(...SE_KEY_ROWS.map(row => seRow({
     keys: row.keys,
