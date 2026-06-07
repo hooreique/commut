@@ -13,13 +13,13 @@ const seKeyLabel = (name: JamoName): string => jamo[name].label;
 
 const longPressLabel = (seKey: SeKey): string =>
   seKey.upper === undefined
-    ? (seKey.spaceOnLongPress === true ? '·' : '')
+    ? (seKey.flushOnLongPress === true ? '·' : '')
     : seKeyLabel(seKey.upper);
 
-const seBtn = ({ seKey, emitSe, emitSeSpace }: {
+const seBtn = ({ seKey, emitSe, emitSeFlush }: {
   readonly seKey: SeKey;
   readonly emitSe: (jamo: Jamo) => void;
-  readonly emitSeSpace: () => void;
+  readonly emitSeFlush: () => void;
 }): Readonly<HTMLButtonElement> => {
   const it = document.createElement('button');
   it.type = 'button';
@@ -54,9 +54,9 @@ const seBtn = ({ seKey, emitSe, emitSeSpace }: {
     emitSe(jamo[name]);
   };
 
-  const space = (): void => {
+  const flush = (): void => {
     emitted = true;
-    emitSeSpace();
+    emitSeFlush();
   };
 
   const clearTimer = (): void => {
@@ -74,7 +74,7 @@ const seBtn = ({ seKey, emitSe, emitSeSpace }: {
     it.setPointerCapture(ev.pointerId);
 
     const upper = seKey.upper;
-    if (upper !== undefined || seKey.spaceOnLongPress === true) {
+    if (upper !== undefined || seKey.flushOnLongPress === true) {
       timer = window.setTimeout(() => {
         timer = undefined;
         if (upper !== undefined) {
@@ -83,8 +83,8 @@ const seBtn = ({ seKey, emitSe, emitSeSpace }: {
           return;
         }
 
-        showPop('Space');
-        space();
+        showPop('Flush');
+        flush();
       }, LONG_PRESS_MS);
     }
   });
@@ -114,10 +114,10 @@ const seBtn = ({ seKey, emitSe, emitSeSpace }: {
   return it;
 };
 
-const seRow = ({ keys, emitSe, emitSeSpace }: {
+const seRow = ({ keys, emitSe, emitSeFlush }: {
   readonly keys: readonly SeKey[];
   readonly emitSe: (jamo: Jamo) => void;
-  readonly emitSeSpace: () => void;
+  readonly emitSeFlush: () => void;
 }): Readonly<HTMLDivElement> => {
   const it = document.createElement('div');
   it.className = 'grid grid-cols-20 w-full gap-1 justify-items-center' as Uno;
@@ -127,7 +127,7 @@ const seRow = ({ keys, emitSe, emitSeSpace }: {
     const btn = seBtn({
       seKey,
       emitSe,
-      emitSeSpace,
+      emitSeFlush,
     });
 
     btn.style.gridColumn = index === 0
@@ -140,9 +140,9 @@ const seRow = ({ keys, emitSe, emitSeSpace }: {
   return it;
 };
 
-export const seKbd = ({ emitSe, emitSeSpace }: {
+export const seKbd = ({ emitSe, emitSeFlush }: {
   readonly emitSe: (jamo: Jamo) => void;
-  readonly emitSeSpace: () => void;
+  readonly emitSeFlush: () => void;
 }): Readonly<HTMLDivElement> => {
   const it = document.createElement('div');
   it.className = 'grid w-full max-w-[min(28rem,calc(100vw-1rem))] justify-self-center box-border gap-2 overflow-hidden px-1 pb-1 justify-items-stretch' as Uno;
@@ -150,7 +150,7 @@ export const seKbd = ({ emitSe, emitSeSpace }: {
   it.replaceChildren(...SE_KEY_ROWS.map(row => seRow({
     keys: row.keys,
     emitSe,
-    emitSeSpace,
+    emitSeFlush,
   })));
 
   return it;

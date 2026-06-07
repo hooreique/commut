@@ -5,7 +5,7 @@ export type JamoName = keyof typeof jamo;
 export type SeKey = Readonly<{
   lower: JamoName;
   upper?: JamoName;
-  spaceOnLongPress?: boolean;
+  flushOnLongPress?: boolean;
 }>;
 
 export type SeKeyRow = Readonly<{
@@ -16,8 +16,8 @@ export type SeKeyRow = Readonly<{
 const key = (
   lower: JamoName,
   upper?: JamoName,
-  spaceOnLongPress = false,
-): SeKey => ({ lower, upper, spaceOnLongPress });
+  flushOnLongPress = false,
+): SeKey => ({ lower, upper, flushOnLongPress });
 
 /**
  * Rows mirror frontend/se-layout.txt. The visible lower key is emitted on tap;
@@ -29,43 +29,43 @@ export const SE_KEY_ROWS: readonly SeKeyRow[] = Object.freeze([
     keys: Object.freeze([
       key('_ㅆ', '_ㄲ'),
       key('_ㅎ', '_ㅈ'),
-      key('_ㄴ', '_ㄶ'),
-      key('_ㅇ', '_ㅄ'),
-      key('_ㄹ', '_ㅍ'),
-      key('_ㅅ', '_ㅌ'),
-      key('_ㅂ', '_ㄺ'),
-      key('_ㄱ', '_ㄻ'),
-      key('_ㅁ', '_ㅊ'),
-      key('_ㄷ', '_ㅋ'),
+      key('_ㄴ', '_ㅍ'),
+      key('_ㅇ', '_ㄷ'),
+      key('_ㄹ', '_ㄺ'),
+      key('_ㅅ', '_ㅊ'),
+      key('_ㅂ', '_ㅄ'),
+      key('_ㄱ', '_ㄶ'),
+      key('_ㅁ', '_ㄻ'),
+      key('_ㅌ', '_ㅋ'),
     ]),
   },
   {
     label: '중성',
     keys: Object.freeze([
-      key('ㅙ', 'ㅝ'),
+      key('ㅝ', 'ㅘ'),
       key('ㅜ', 'ㅠ'),
-      key('ㅡ', 'ㅢ'),
-      key('ㅗ', 'ㅛ'),
-      key('ㅣ', 'ㅘ'),
+      key('ㅓ', 'ㅔ'),
       key('ㅏ', 'ㅑ'),
-      key('ㅓ', 'ㅕ'),
+      key('ㅣ', 'ㅞ'),
+      key('ㅕ', 'ㅖ'),
+      key('ㅡ', 'ㅙ'),
+      key('ㅗ', 'ㅛ'),
       key('ㅐ', 'ㅒ'),
-      key('ㅔ', 'ㅖ'),
     ]),
   },
   {
     label: '초성',
     keys: Object.freeze([
-      key('ㄹ', 'ㅌ'),
-      key('ㅅ', 'ㅆ'),
+      key('ㅎ', 'ㅋ'),
+      key('ㅂ', 'ㅃ'),
       key('ㄷ', 'ㄸ'),
-      key('ㅁ', 'ㅍ'),
-      key('ㄴ', 'ㅊ'),
+      key('ㄹ', 'ㅌ'),
       key('ㅇ', undefined, true),
       key('ㄱ', 'ㄲ'),
+      key('ㄴ', 'ㅊ'),
+      key('ㅁ', 'ㅍ'),
+      key('ㅅ', 'ㅆ'),
       key('ㅈ', 'ㅉ'),
-      key('ㅂ', 'ㅃ'),
-      key('ㅎ', 'ㅋ'),
     ]),
   },
 ]);

@@ -11,27 +11,27 @@ const lowerLabels = (rowIndex: number): readonly string[] =>
 
 const upperLabels = (rowIndex: number): readonly string[] =>
   SE_KEY_ROWS[rowIndex].keys.map(key => {
-    if (key.spaceOnLongPress === true) return '·';
+    if (key.flushOnLongPress === true) return '·';
     if (key.upper === undefined) return '';
     return keyLabel(key.upper);
   });
 
 test('se keyboard lower labels match se-layout.txt', () => {
-  assert.deepEqual(lowerLabels(0), ['ㅆ', 'ㅎ', 'ㄴ', 'ㅇ', 'ㄹ', 'ㅅ', 'ㅂ', 'ㄱ', 'ㅁ', 'ㄷ']);
-  assert.deepEqual(lowerLabels(1), ['ㅙ', 'ㅜ', 'ㅡ', 'ㅗ', 'ㅣ', 'ㅏ', 'ㅓ', 'ㅐ', 'ㅔ']);
-  assert.deepEqual(lowerLabels(2), ['ㄹ', 'ㅅ', 'ㄷ', 'ㅁ', 'ㄴ', 'ㅇ', 'ㄱ', 'ㅈ', 'ㅂ', 'ㅎ']);
+  assert.deepEqual(lowerLabels(0), ['ㅆ', 'ㅎ', 'ㄴ', 'ㅇ', 'ㄹ', 'ㅅ', 'ㅂ', 'ㄱ', 'ㅁ', 'ㅌ']);
+  assert.deepEqual(lowerLabels(1), ['ㅝ', 'ㅜ', 'ㅓ', 'ㅏ', 'ㅣ', 'ㅕ', 'ㅡ', 'ㅗ', 'ㅐ']);
+  assert.deepEqual(lowerLabels(2), ['ㅎ', 'ㅂ', 'ㄷ', 'ㄹ', 'ㅇ', 'ㄱ', 'ㄴ', 'ㅁ', 'ㅅ', 'ㅈ']);
 });
 
 test('se keyboard long-press labels match upper keys', () => {
-  assert.deepEqual(upperLabels(0), ['ㄲ', 'ㅈ', 'ㄶ', 'ㅄ', 'ㅍ', 'ㅌ', 'ㄺ', 'ㄻ', 'ㅊ', 'ㅋ']);
-  assert.deepEqual(upperLabels(1), ['ㅝ', 'ㅠ', 'ㅢ', 'ㅛ', 'ㅘ', 'ㅑ', 'ㅕ', 'ㅒ', 'ㅖ']);
-  assert.deepEqual(upperLabels(2), ['ㅌ', 'ㅆ', 'ㄸ', 'ㅍ', 'ㅊ', '·', 'ㄲ', 'ㅉ', 'ㅃ', 'ㅋ']);
+  assert.deepEqual(upperLabels(0), ['ㄲ', 'ㅈ', 'ㅍ', 'ㄷ', 'ㄺ', 'ㅊ', 'ㅄ', 'ㄶ', 'ㄻ', 'ㅋ']);
+  assert.deepEqual(upperLabels(1), ['ㅘ', 'ㅠ', 'ㅔ', 'ㅑ', 'ㅞ', 'ㅖ', 'ㅙ', 'ㅛ', 'ㅒ']);
+  assert.deepEqual(upperLabels(2), ['ㅋ', 'ㅃ', 'ㄸ', 'ㅌ', '·', 'ㄲ', 'ㅊ', 'ㅍ', 'ㅆ', 'ㅉ']);
 });
 
-test('se keyboard emits space on long-pressing initial ieung', () => {
-  const choIeung = SE_KEY_ROWS[2].keys[5];
+test('se keyboard flushes on long-pressing initial ieung', () => {
+  const choIeung = SE_KEY_ROWS[2].keys[4];
 
   assert.equal(choIeung.lower, 'ㅇ');
   assert.equal(choIeung.upper, undefined);
-  assert.equal(choIeung.spaceOnLongPress, true);
+  assert.equal(choIeung.flushOnLongPress, true);
 });

@@ -23,7 +23,7 @@ export const mainFrame = ({
   onVk,
   onVkComp,
   onSe,
-  onSeSpace,
+  onSeFlush,
   onFocusBtnClick,
 }: {
   readonly smallInit: () => boolean;
@@ -36,7 +36,7 @@ export const mainFrame = ({
   readonly onVk: (listen: (v: string) => void) => void;
   readonly onVkComp: (listen: (v: string) => void) => void;
   readonly onSe: (listen: (jamo: Jamo) => void) => void;
-  readonly onSeSpace: (listen: () => void) => void;
+  readonly onSeFlush: (listen: () => void) => void;
   readonly onFocusBtnClick: (listen: () => void) => void;
 }): Readonly<HTMLDivElement> => {
   const { emit: emitWidthMain, on: onWidthMain } = channel<boolean>();
@@ -167,9 +167,8 @@ export const mainFrame = ({
     onSe(jamo => {
       se.inbound(jamo);
     });
-    onSeSpace(() => {
+    onSeFlush(() => {
       flushSe();
-      emitInput(' ');
     });
 
     onFocusBtnClick(() => term.focus());

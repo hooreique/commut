@@ -9,7 +9,7 @@ export type VkLayoutContext = Readonly<{
   readonly emitVk: (v: string) => void;
   readonly emitVkPartial: (partial: VirtualKbdPartial) => void;
   readonly emitSe: (jamo: Jamo) => void;
-  readonly emitSeSpace: () => void;
+  readonly emitSeFlush: () => void;
   readonly emitFocusBtnClick: () => void;
 }>;
 
