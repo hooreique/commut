@@ -1,6 +1,6 @@
 import type { Dimensions } from './natural-number.pure.ts';
 
-import type { Conn } from './connect.ts';
+import type { Conn, WsClose } from './connect.ts';
 import type { Commut } from './commut.pure.ts';
 import { channel } from './channel.pure.ts';
 import { enter } from './enter.ts';
@@ -12,6 +12,13 @@ import { toAz } from './virtual-kbd.pure.ts';
 import { rack } from './rack.comp.ts';
 
 
+const PRIVATE_KEY_CACHE_TTL_MS = 24 * 60 * 60 * 1_000;
+const RECONNECT_DELAY_MS = 250;
+const WS_CLOSE_NORMAL = 4000;
+const WS_CLOSE_PTY_EXIT = 4001;
+
+const reconnectableClose = ({ code }: WsClose): boolean => code !== WS_CLOSE_NORMAL && code !== WS_CLOSE_PTY_EXIT;
+
 export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
   readonly encpri: () => string | null;
   readonly fetch: Fetch;
@@ -22,7 +29,7 @@ export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
   const { emit: emitDisconnBtnClick, on: onDisconnBtnClick } = channel<void>();
   const { emit: emitWsOpen, on: onWsOpen } = channel<Conn>();
   const { emit: emitWsMsg, on: onWsMsg } = channel<ArrayBuffer>();
-  const { emit: emitWsClose, on: onWsClose } = channel<void>();
+  const { emit: emitWsClose, on: onWsClose } = channel<WsClose>();
   const { emit: emitCommutReady, on: onCommutReady } = channel<Commut>();
   const { emit: emitHealthyChange, on: onHealthyChange } = channel<boolean>();
   const { emit: emitCopy, on: onCopy } = channel<string>();
@@ -31,7 +38,119 @@ export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
   const { emit: emitVkPartial, on: onVkPartial } = channel<VirtualKbdPartial>();
   const { emit: emitVk, on: onVk } = channel<string>();
 
-  onWsOpen(({ send, close, encrypt, decrypt }) => {
+  let cachedPri: ArrayBuffer | undefined;
+  let cachedPriExpiresAt = 0;
+  let cacheExpiryTimer: number | undefined;
+  let reconnectTimer: number | undefined;
+  let currentConn: Conn | undefined;
+  const staleConns = new WeakSet<Conn>();
+  let connecting = false;
+  let healthy = false;
+  let wantsConnection = false;
+
+  const setHealthy = (next: boolean): void => {
+    healthy = next;
+    emitHealthyChange(next);
+  };
+
+  const forgetPri = (): void => {
+    if (cachedPri !== undefined) {
+      new Uint8Array(cachedPri).fill(0);
+    }
+
+    cachedPri = undefined;
+    cachedPriExpiresAt = 0;
+
+    if (cacheExpiryTimer !== undefined) {
+      clearTimeout(cacheExpiryTimer);
+      cacheExpiryTimer = undefined;
+    }
+  };
+
+  const rememberPri = (pri: ArrayBuffer): void => {
+    forgetPri();
+    cachedPri = pri.slice(0);
+    cachedPriExpiresAt = Date.now() + PRIVATE_KEY_CACHE_TTL_MS;
+    cacheExpiryTimer = setTimeout(forgetPri, PRIVATE_KEY_CACHE_TTL_MS);
+  };
+
+  const cachedPriCopy = (): ArrayBuffer | undefined => {
+    if (cachedPri === undefined) return undefined;
+
+    if (Date.now() >= cachedPriExpiresAt) {
+      forgetPri();
+      return undefined;
+    }
+
+    return cachedPri.slice(0);
+  };
+
+  const hasOpenConnection = (): boolean => currentConn?.isOpen() === true;
+
+  const openConnection = (pri: ArrayBuffer): Promise<void> => {
+    if (connecting || hasOpenConnection()) return Promise.resolve();
+
+    connecting = true;
+
+    return connect({
+      pri,
+      fetch: withTrace(fetch),
+      smallInit,
+      emitWsOpen,
+      emitWsMsg,
+      emitWsClose,
+    })
+      .catch(error => {
+        connecting = false;
+        throw error;
+      });
+  };
+
+  const reconnectFromCache = (): void => {
+    reconnectTimer = undefined;
+
+    if (!wantsConnection || connecting || document.visibilityState !== 'visible') return;
+
+    if (hasOpenConnection()) return;
+
+    if (currentConn !== undefined) {
+      staleConns.add(currentConn);
+      currentConn = undefined;
+    }
+
+    if (healthy) setHealthy(false);
+
+    const pri = cachedPriCopy();
+    if (pri === undefined) return;
+
+    openConnection(pri).catch(console.error);
+  };
+
+  const scheduleReconnect = (): void => {
+    if (reconnectTimer !== undefined) return;
+
+    reconnectTimer = setTimeout(reconnectFromCache, RECONNECT_DELAY_MS);
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') scheduleReconnect();
+  });
+
+  window.addEventListener('pageshow', () => {
+    scheduleReconnect();
+  });
+
+  onDisconnBtnClick(() => {
+    wantsConnection = false;
+    forgetPri();
+    currentConn?.close();
+  });
+
+  onWsOpen(conn => {
+    currentConn = conn;
+    connecting = false;
+
+    const { send, encrypt, decrypt } = conn;
     const read = reader(decrypt);
     const write = writer(encrypt, bytes => crypto.getRandomValues(bytes));
 
@@ -66,15 +185,24 @@ export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
 
     onResizeSend(dimensions => send(writeResize(dimensions)));
 
-    onDisconnBtnClick(() => {
-      close();
-    });
-
-    emitHealthyChange(true);
+    setHealthy(true);
   });
 
-  onWsClose(() => {
-    emitHealthyChange(false);
+  onWsClose(close => {
+    if (staleConns.has(close.conn)) return;
+    if (currentConn !== undefined && close.conn !== currentConn) return;
+
+    currentConn = undefined;
+    connecting = false;
+    setHealthy(false);
+
+    if (!reconnectableClose(close)) {
+      wantsConnection = false;
+      forgetPri();
+      return;
+    }
+
+    scheduleReconnect();
   });
 
   const dialogEl = document.createElement('dialog');
@@ -104,14 +232,11 @@ export const inner = ({ encpri, fetch, smallInit, onWidthChange }: {
         ev.preventDefault();
         const passphrase = (ev.currentTarget as HTMLInputElement).value;
         enter({ passphrase, encpri })
-          .then(pri => connect({
-            pri,
-            fetch: withTrace(fetch),
-            smallInit,
-            emitWsOpen,
-            emitWsMsg,
-            emitWsClose,
-          }))
+          .then(pri => {
+            rememberPri(pri);
+            wantsConnection = true;
+            return openConnection(pri);
+          })
           .catch(console.error)
           .finally(() => dialogEl.close());
       }

@@ -4,8 +4,15 @@ import type { Codec } from './codec.pure.ts';
 export type Conn = {
   readonly send: (data: Uint8Array<ArrayBuffer>) => void;
   readonly close: () => void;
+  readonly isOpen: () => boolean;
   readonly encrypt: Codec;
   readonly decrypt: Codec;
+};
+
+export type WsClose = {
+  readonly code: number;
+  readonly reason: string;
+  readonly conn: Conn;
 };
 
 const te = new TextEncoder();
@@ -25,7 +32,7 @@ export const connect = ({
   readonly smallInit: () => boolean;
   readonly emitWsOpen: (conn: Conn) => void;
   readonly emitWsMsg: (data: ArrayBuffer) => void;
-  readonly emitWsClose: () => void;
+  readonly emitWsClose: (close: WsClose) => void;
 }): Promise<void> => Promise.all([
   fetch('/api/nonce', { method: 'post' }).then(res => {
     if (res.ok) return res.text();
@@ -84,28 +91,46 @@ export const connect = ({
       .then(ws => {
         console.debug('connection:', ws);
 
-        ws.addEventListener('open', () => {
-          emitWsOpen({
+        return new Promise<void>((resolve, reject) => {
+          let opened = false;
+          const conn: Conn = {
             send: data => ws.send(data),
             close: () => ws.close(4000),
+            isOpen: () => ws.readyState === WebSocket.OPEN,
             encrypt,
             decrypt,
+          };
+
+          ws.addEventListener('open', () => {
+            opened = true;
+            emitWsOpen(conn);
+            resolve();
           });
-        });
 
-        ws.addEventListener('message', ({ data }) => {
-          emitWsMsg(data as ArrayBuffer);
-        });
+          ws.addEventListener('message', ({ data }) => {
+            emitWsMsg(data as ArrayBuffer);
+          });
 
-        ws.addEventListener('close', ({ code, reason }) => {
-          emitWsClose();
+          ws.addEventListener('close', ({ code, reason }) => {
+            emitWsClose({ code, reason, conn });
 
-          if (code === 4000) {
-            console.debug('connection closed');
-          } else if (code === 4001) {
-            console.debug('connection closed by pty:', reason);
-          } else {
-            console.info('connection closed unexpectedly:', code, reason);
-          }
+            if (!opened) {
+              reject({ message: 'websocket closed before opening' });
+            }
+
+            if (code === 4000) {
+              console.debug('connection closed');
+            } else if (code === 4001) {
+              console.debug('connection closed by pty:', reason);
+            } else {
+              console.info('connection closed unexpectedly:', code, reason);
+            }
+          });
+
+          ws.addEventListener('error', () => {
+            if (!opened) {
+              reject({ message: 'websocket failed before opening' });
+            }
+          });
         });
       })));
