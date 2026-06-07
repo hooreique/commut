@@ -166,7 +166,7 @@ export const vkCommonRows = ({ emitVk, emitVkPartial, emitFocusBtnClick }: VkLay
   it.className = 'box-border flex w-full max-w-full min-w-0 flex-nowrap gap-2 overflow-x-auto justify-start justify-self-stretch' as Uno;
 
   it.replaceChildren(
-    ...[VK.ESC, VK.LEFT, VK.DOWN, VK.UP, VK.RIGHT, VK.CR, VK.TAB, VK.DEL, VK.SPACE, VK.BS]
+    ...[VK.ESC, VK.LEFT, VK.DOWN, VK.UP, VK.RIGHT, VK.SPACE, VK.CR, VK.TAB, VK.BS, VK.DEL]
       .map(vk => vkBtn({ vk, emitVk, emitVkPartial })),
     focusBtnEl,
     ...[VK.CTRL, VK.META, VK.HOME, VK.PGDN, VK.PGUP, VK.END]
