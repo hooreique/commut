@@ -3,7 +3,7 @@ import type { Jamo } from 'libse';
 import type { VirtualKbdPartial } from './virtual-kbd.pure.ts';
 
 
-export type VkLayoutId = 'se';
+export type VkLayoutId = 'se' | 'co';
 
 export type VkLayoutContext = Readonly<{
   readonly emitVk: (v: string) => void;

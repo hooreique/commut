@@ -1,4 +1,5 @@
 import type { VirtualKbd, VirtualKbdPartial } from './virtual-kbd.pure.ts';
+import { showKeyPop } from './key-pop.comp.ts';
 import { VK } from './virtual-kbd.pure.ts';
 import type { VkLayoutContext } from './vk-layout.ts';
 
@@ -10,6 +11,11 @@ const VK_SHIFT_KEY_COLUMNS = 2;
 type VkShiftKey = Readonly<{
   readonly upper: string;
   readonly lower: string;
+}>;
+
+type VkButtonKey = Readonly<{
+  readonly vk: VirtualKbd;
+  readonly popLabel: string;
 }>;
 
 const VK_SHIFT_ROWS: readonly (readonly VkShiftKey[])[] = Object.freeze([
@@ -38,8 +44,56 @@ const VK_SHIFT_ROWS: readonly (readonly VkShiftKey[])[] = Object.freeze([
   ]),
 ]);
 
-const vkBtn = ({ vk, emitVk, emitVkPartial }: {
+const VK_LEADING_KEYS: readonly VkButtonKey[] = Object.freeze([
+  { vk: VK.ESC, popLabel: 'Escape' },
+  { vk: VK.LEFT, popLabel: 'Left' },
+  { vk: VK.DOWN, popLabel: 'Down' },
+  { vk: VK.UP, popLabel: 'Up' },
+  { vk: VK.RIGHT, popLabel: 'Right' },
+  { vk: VK.SPACE, popLabel: 'Space' },
+  { vk: VK.CR, popLabel: 'Return' },
+  { vk: VK.TAB, popLabel: 'Tab' },
+  { vk: VK.BS, popLabel: 'Backspace' },
+  { vk: VK.DEL, popLabel: 'Delete' },
+]);
+
+const VK_TRAILING_KEYS: readonly VkButtonKey[] = Object.freeze([
+  { vk: VK.HOME, popLabel: 'Home' },
+  { vk: VK.PGDN, popLabel: 'Page Down' },
+  { vk: VK.PGUP, popLabel: 'Page Up' },
+  { vk: VK.END, popLabel: 'End' },
+]);
+
+const bindPressPop = (it: HTMLButtonElement, label: string): void => {
+  let closePop: (() => void) | undefined;
+
+  const closeActivePop = (): void => {
+    closePop?.();
+    closePop = undefined;
+  };
+
+  it.addEventListener('pointerdown', ev => {
+    if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+
+    closeActivePop();
+    closePop = showKeyPop(it, label);
+    it.setPointerCapture(ev.pointerId);
+  });
+
+  it.addEventListener('pointerup', ev => {
+    if (it.hasPointerCapture(ev.pointerId)) {
+      it.releasePointerCapture(ev.pointerId);
+    }
+    closeActivePop();
+  });
+
+  it.addEventListener('pointercancel', closeActivePop);
+  it.addEventListener('lostpointercapture', closeActivePop);
+};
+
+const vkBtn = ({ vk, popLabel, emitVk, emitVkPartial }: {
   readonly vk: VirtualKbd;
+  readonly popLabel?: string;
   readonly emitVk: (v: string) => void;
   readonly emitVkPartial: (partial: VirtualKbdPartial) => void;
 }): Readonly<HTMLButtonElement> => {
@@ -62,6 +116,8 @@ const vkBtn = ({ vk, emitVk, emitVkPartial }: {
 
   if (typeof vk.v === 'function') {
     it.title = `${vk.label} + …`;
+  } else if (popLabel !== undefined) {
+    bindPressPop(it, popLabel);
   }
 
   return it;
@@ -87,6 +143,17 @@ const vkShiftBtn = ({ vk, emitVk }: {
 
   let timer: number | undefined;
   let emitted = false;
+  let closePop: (() => void) | undefined;
+
+  const closeActivePop = (): void => {
+    closePop?.();
+    closePop = undefined;
+  };
+
+  const showPop = (label: string): void => {
+    closeActivePop();
+    closePop = showKeyPop(it, label);
+  };
 
   const clearTimer = (): void => {
     if (timer === undefined) return;
@@ -99,11 +166,13 @@ const vkShiftBtn = ({ vk, emitVk }: {
 
     ev.preventDefault();
     emitted = false;
+    showPop(vk.lower);
     it.setPointerCapture(ev.pointerId);
 
     timer = window.setTimeout(() => {
       timer = undefined;
       emitted = true;
+      showPop(vk.upper);
       emitVk(vk.upper);
     }, LONG_PRESS_MS);
   });
@@ -118,9 +187,13 @@ const vkShiftBtn = ({ vk, emitVk }: {
     if (!emitted) {
       emitVk(vk.lower);
     }
+    closeActivePop();
   });
 
-  it.addEventListener('pointercancel', clearTimer);
+  it.addEventListener('pointercancel', () => {
+    clearTimer();
+    closeActivePop();
+  });
   it.addEventListener('lostpointercapture', clearTimer);
 
   return it;
@@ -156,6 +229,7 @@ export const vkCommonRows = ({ emitVk, emitVkPartial, emitFocusBtnClick }: VkLay
     it.title = 'Return Focus';
     it.setAttribute('aria-label', 'Return Focus');
     it.innerText = '⌖';
+    bindPressPop(it, 'Return Focus');
 
     it.addEventListener('click', () => emitFocusBtnClick());
 
@@ -166,11 +240,13 @@ export const vkCommonRows = ({ emitVk, emitVkPartial, emitFocusBtnClick }: VkLay
   it.className = 'box-border flex w-full max-w-full min-w-0 flex-nowrap gap-2 overflow-x-auto justify-start justify-self-stretch' as Uno;
 
   it.replaceChildren(
-    ...[VK.ESC, VK.LEFT, VK.DOWN, VK.UP, VK.RIGHT, VK.SPACE, VK.CR, VK.TAB, VK.BS, VK.DEL]
-      .map(vk => vkBtn({ vk, emitVk, emitVkPartial })),
+    ...VK_LEADING_KEYS
+      .map(({ vk, popLabel }) => vkBtn({ vk, popLabel, emitVk, emitVkPartial })),
     focusBtnEl,
-    ...[VK.CTRL, VK.META, VK.HOME, VK.PGDN, VK.PGUP, VK.END]
-      .map(vk => vkBtn({ vk, emitVk, emitVkPartial })));
+    ...[VK.CTRL, VK.META]
+      .map(vk => vkBtn({ vk, emitVk, emitVkPartial })),
+    ...VK_TRAILING_KEYS
+      .map(({ vk, popLabel }) => vkBtn({ vk, popLabel, emitVk, emitVkPartial })));
 
   return [
     it,
