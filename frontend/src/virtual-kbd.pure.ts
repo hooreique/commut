@@ -22,25 +22,26 @@ export type VirtualKbd = VirtualKbdPartial | {
 };
 
 export const VK: Readonly<Record<string, VirtualKbd>> = {
-  ESC: { v: '\x1b', label: 'Escape' },
-  CR: { v: '\r', label: 'Return' },
+  ESC: { v: '\x1b', label: '⎋' },
+  CR: { v: '\r', label: '⏎' },
   UP: { v: '\x1b[A', label: '↑' },
   DOWN: { v: '\x1b[B', label: '↓' },
   LEFT: { v: '\x1b[D', label: '←' },
   RIGHT: { v: '\x1b[C', label: '→' },
-  TAB: { v: '\t', label: 'Tab' },
-  HOME: { v: '\x1b[H', label: 'Home' },
-  END: { v: '\x1b[F', label: 'End' },
-  PGUP: { v: '\x1b[5~', label: 'PgUp' },
-  PGDN: { v: '\x1b[6~', label: 'PgDn' },
-  DEL: { v: '\x1b[3~', label: 'Delete' },
-  BS: { v: '\x7f', label: 'Backspace' },
+  TAB: { v: '\t', label: '⇥' },
+  HOME: { v: '\x1b[H', label: '⇱' },
+  END: { v: '\x1b[F', label: '⇲' },
+  PGUP: { v: '\x1b[5~', label: '⇞' },
+  PGDN: { v: '\x1b[6~', label: '⇟' },
+  DEL: { v: '\x1b[3~', label: '⌦' },
+  SPACE: { v: ' ', label: '␣' },
+  BS: { v: '\x7f', label: '⌫' },
   CTRL: {
     v: suffix => String.fromCharCode(suffix.toUpperCase().charCodeAt(0) - 64),
-    label: 'Ctrl',
+    label: '⌃',
   },
   META: {
     v: suffix => '\x1b' + suffix.toLowerCase(),
-    label: 'Meta',
+    label: '⌥',
   },
 };
