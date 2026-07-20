@@ -76,7 +76,7 @@ export const virtualKbd = (context: VkLayoutContext): Readonly<HTMLDivElement> =
   renderNav();
   renderDynamic();
 
-  vkLayoutPanel.replaceChildren(vkLayoutStatic, vkLayoutDynamic);
+  vkLayoutPanel.replaceChildren(vkLayoutDynamic, vkLayoutStatic);
 
   it.replaceChildren(vkLayoutNav, vkLayoutPanel);
 
