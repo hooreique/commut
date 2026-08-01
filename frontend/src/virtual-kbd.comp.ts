@@ -18,6 +18,14 @@ const CO_LAYOUT: VkLayout = {
 
 const VK_LAYOUTS: readonly VkLayout[] = Object.freeze([CO_LAYOUT, SE_LAYOUT]);
 
+const wrapCommonRows = (rows: readonly Readonly<HTMLDivElement>[]): Readonly<HTMLDivElement> => {
+  const it = document.createElement('div');
+  it.className = 'grid min-w-0 justify-self-center box-border gap-2 px-1 justify-items-stretch w-[min(360px,calc(100vw-1rem))] min-[960px]:w-[min(28rem,calc(100vw-1rem))]' as Uno;
+  it.replaceChildren(...rows);
+
+  return it;
+};
+
 export const virtualKbd = (context: VkLayoutContext): Readonly<HTMLDivElement> => {
   let activeLayout = CO_LAYOUT;
 
@@ -33,9 +41,9 @@ export const virtualKbd = (context: VkLayoutContext): Readonly<HTMLDivElement> =
   const vkLayoutDynamic = document.createElement('div');
   vkLayoutDynamic.className = 'grid gap-4' as Uno;
 
-  const vkLayoutStatic = document.createElement('div');
-  vkLayoutStatic.className = 'grid min-w-0 justify-self-center box-border gap-2 px-1 justify-items-stretch w-[min(360px,calc(100vw-1rem))] min-[960px]:w-[min(28rem,calc(100vw-1rem))]' as Uno;
-  vkLayoutStatic.replaceChildren(...vkCommonRows(context));
+  const [vkControlRow, ...vkShiftRows] = vkCommonRows(context);
+  const vkLayoutShiftRows = wrapCommonRows(vkShiftRows);
+  const vkLayoutControlRow = wrapCommonRows([vkControlRow]);
 
   const renderDynamic = (): void => {
     vkLayoutDynamic.replaceChildren(activeLayout.renderDynamic(context));
@@ -76,7 +84,7 @@ export const virtualKbd = (context: VkLayoutContext): Readonly<HTMLDivElement> =
   renderNav();
   renderDynamic();
 
-  vkLayoutPanel.replaceChildren(vkLayoutDynamic, vkLayoutStatic);
+  vkLayoutPanel.replaceChildren(vkLayoutShiftRows, vkLayoutDynamic, vkLayoutControlRow);
 
   it.replaceChildren(vkLayoutNav, vkLayoutPanel);
 
