@@ -28,7 +28,8 @@ const VK_SHIFT_ROWS: readonly (readonly VkShiftKey[])[] = Object.freeze([
     { upper: '"', lower: "'" },
     { upper: '<', lower: ',' },
     { upper: '>', lower: '.' },
-    { upper: '?', lower: '/' },
+    { upper: '_', lower: '-' },
+    { upper: '+', lower: '=' },
   ]),
   Object.freeze([
     { upper: '!', lower: '1' },
