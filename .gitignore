@@ -1,6 +1,30 @@
+# Local configuration and environment
 *.local
+.env
+.env.*
+!.env.example
+!.env.*.example
+.direnv/
+.venv/
+
+# OS and editor artifacts
 .DS_Store
 .vscode
 .idea
+*~
+*.swp
+*.swo
+
+# Runtime logs
 logs
+*.log
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Nix build outputs
 result*
