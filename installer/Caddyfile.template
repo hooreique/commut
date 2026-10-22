@@ -1,39 +1,29 @@
-{
-  $debug_line
-  http_port  $caddy_http_port
-  https_port $caddy_https_port
-}
-
-http://$domain {
-  redir https://$domain{uri}
-}
-
-https://$domain {
+$domain {
   handle_path /app/* {
     header Cache-Control "no-cache"
-    root * {{ clientAppRoot }}
+    root * "$client_root/build/app"
     file_server
   }
 
   @public path /favicon.ico /manifest.json /images/* /fonts/*
 
   handle @public {
-    root * {{ clientPublicRoot }}
+    root * "$client_root/public"
     file_server
   }
 
   handle_path /dist/* {
     header Cache-Control "public, max-age=31536000, immutable"
-    root * {{ clientDistRoot }}
+    root * "$client_root/dist"
     file_server
   }
 
   handle /api/* {
-    reverse_proxy $listen_host:$listen_port
+    reverse_proxy $upstream
   }
 
   handle /sockets/* {
-    reverse_proxy $listen_host:$listen_port
+    reverse_proxy $upstream
   }
 
   handle {

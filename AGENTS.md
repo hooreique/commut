@@ -25,7 +25,7 @@ This file only covers repository-specific guidance for agents working in this tr
 
 - **Enter dev shell:** `nix develop`
 - **Run dev server:** `nix run .#dev-server`
-- **Build (all):** `nix build .#commut .#commut-installer`
+- **Build (all):** `nix build .#commut .#commut-server`
 - **Build (backend):** `nix develop --command -- cargo build --manifest-path backend/Cargo.toml`
 - **Lint (backend):** `nix develop --command -- cargo clippy --manifest-path backend/Cargo.toml -- -D warnings`
 - **Test (backend):** `nix develop --command -- cargo test --manifest-path backend/Cargo.toml`
@@ -37,6 +37,7 @@ This file only covers repository-specific guidance for agents working in this tr
 - **Typecheck (frontend, after installing frontend dependencies):** `nix develop --command -- pnpm --dir frontend run typecheck`
 - **Format (Rust):** `nix develop --command -- cargo fmt --manifest-path backend/Cargo.toml`
 - **Format (frontend):** no dedicated formatter is configured; keep TypeScript/CSS style consistent with surrounding files.
+- **Test integrated CLI (isolated systemd/loginctl stubs):** `nix develop --command -- python3 cli/test_cli.py`
 - **Check Nix files:** `nix flake check`
 
 ## Change-Specific Guidance
@@ -53,5 +54,6 @@ This file only covers repository-specific guidance for agents working in this tr
 - `dev-server.nix`: local development server app for `nix run .#dev-server`
 - `backend/`: Rust backend service
 - `frontend/`: TypeScript web client and static assets
-- `installer/`: Nix and shell deployment tooling
+- `cli/`: integrated user CLI and packaging
+- `installer/`: Caddy site template
 - `.github/`: GitHub automation

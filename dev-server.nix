@@ -166,7 +166,7 @@ writeShellApplication {
     (
       cd "$repo_root"
       COMMUT_HOST="$backend_host" COMMUT_PORT="$backend_port" \
-        cargo run --manifest-path backend/Cargo.toml
+        cargo run --manifest-path backend/Cargo.toml --bin commut-server
     ) &
     backend_pid=$!
 

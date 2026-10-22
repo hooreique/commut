@@ -4,7 +4,7 @@
 }:
 let
   original = lib.importTOML ./Cargo.toml;
-  pname = original.package.name;
+  pname = "commut-server";
   version = original.package.version;
 in
 rustPlatform.buildRustPackage {
@@ -16,7 +16,7 @@ rustPlatform.buildRustPackage {
 
   cargoBuildFlags = [
     "--bin"
-    "commut"
+    "commut-server"
   ];
 
   doCheck = false;
@@ -26,7 +26,7 @@ rustPlatform.buildRustPackage {
   '';
 
   meta = {
-    mainProgram = pname;
+    mainProgram = "commut-server";
     description = "commut server";
     homepage = "https://github.com/hooreique/commut";
   };
