@@ -80,7 +80,7 @@ def ctl(*args):
 
 
 def quoted(value):
-    # Both systemd quoted values and Caddy strings accept these escapes.
+    # Environment file values and Caddy strings accept these escapes.
     return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"') + '"'
 
 
@@ -170,7 +170,9 @@ def main():
             atomic(env, MARKER + '\n'.join(f'{key}={quoted(value)}' for key, value in (
                 ('COMMUT_HOST', args.listen_host), ('COMMUT_PORT', args.listen_port),
                 ('COMMUT_AUTHORIZED_PUBLIC_KEY_PEM_FILE', args.authorized_pubkey_file))) + '\n', 0o600)
-            atomic(unit, MARKER + '[Unit]\nDescription=Commut\nAfter=network.target\n\n[Service]\nEnvironmentFile=' + quoted(str(env).replace('%', '%%')) + '\nExecStart=' + SERVER + '/bin/commut-server\nRestart=on-failure\nRestartSec=2s\n\n[Install]\nWantedBy=default.target\n')
+            # EnvironmentFile takes one literal path, including spaces; quotes
+            # become part of the path. Only systemd specifiers need escaping.
+            atomic(unit, MARKER + '[Unit]\nDescription=Commut\nAfter=network.target\n\n[Service]\nEnvironmentFile=' + str(env).replace('%', '%%') + '\nExecStart=' + SERVER + '/bin/commut-server\nRestart=on-failure\nRestartSec=2s\n\n[Install]\nWantedBy=default.target\n')
             ctl('daemon-reload')
             ctl('disable', '--now', 'commut.service')
         except BaseException:

@@ -169,6 +169,23 @@ class Commands(unittest.TestCase):
         self.assertEqual(self.target.read_text(), previous)
         self.assertEqual(len(list((self.base / 'state space/commut/gcroots').glob('site-*/*'))), 1)
 
+    def test_service_environment_file_path(self):
+        config = self.base / 'config space %h "quoted"'
+        os.environ['XDG_CONFIG_HOME'] = str(config)
+        # Use a real executable so systemd can verify the generated unit offline.
+        server_temp = tempfile.TemporaryDirectory(prefix='commut-server-')
+        self.addCleanup(server_temp.cleanup)
+        cli.SERVER = server_temp.name
+        server = Path(cli.SERVER) / 'bin/commut-server'
+        server.parent.mkdir(parents=True)
+        server.symlink_to(sys.executable)
+        self.command('service', 'install', '--authorized-pubkey-file', self.key)
+        unit = config / 'systemd/user/commut.service'
+        self.assertIn('EnvironmentFile=' + str(config / 'commut/service.env').replace('%', '%%') + '\n', unit.read_text())
+        result = subprocess.run(['systemd-analyze', 'verify', str(unit)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('EnvironmentFile=', result.stderr)
+
     def test_invalid(self):
         with self.assertRaises(ValueError):
             self.command('service', 'install', '--authorized-pubkey-file', self.base / 'missing')
