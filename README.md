@@ -1,25 +1,23 @@
 # commut
 
-commut is a personal terminal you host on your own server and access through your own domain.
-
-It is designed for personal use: one server, one domain, one authorized key pair, and a simple browser-based client.
+commut is a personal terminal you host on your server and access through your domain. It uses one authorized key pair and a browser client.
 
 ## Requirements
 
-Before installing commut, prepare:
+- Nix on the server
+- Linux with user-level systemd for `commut service`
+- A hosted shell at `~/.nix-profile/bin/zsh`
+- A domain and an externally managed Caddy server for browser access
 
-- a server
-- a domain pointed at that server
-- Nix on the target machine
-- a Linux environment with user-level `systemd`
-- a `zsh` executable at `~/.nix-profile/bin/zsh`
-- an authorization key pair
+## Install
 
-## Quick Start
+Install the CLI into your Nix profile:
 
-### 1. Generate a Key Pair
+```sh
+nix profile add github:hooreique/commut#commut
+```
 
-Run:
+Generate an authorization key pair:
 
 ```sh
 mkdir -p ~/.config/commut
@@ -28,60 +26,58 @@ openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 \
   -outpubkey ~/.config/commut/authorized.pub.pem
 ```
 
-This creates:
+Keep the private key on the client. Copy only the public key to the server.
 
-- `~/.config/commut/authorized.pri.pem` as the client-side private key
-- `~/.config/commut/authorized.pub.pem` as the server-side authorized public key
-
-Keep `authorized.pri.pem` on the client side. The server needs `authorized.pub.pem`.
-
-### 2. Install commut
-
-Copy the public key to the server if needed, then run:
+Install and start the backend as the target user:
 
 ```sh
-nix run github:hooreique/commut#commut-installer -- install \
-  --domain your-domain.example.com \
-  --authorized-pubkey-file ~/.config/commut/authorized.pub.pem
+commut service install \
+  --authorized-pubkey-file ~/.config/commut/authorized.pub.pem \
+  --enable-linger
+commut service start
 ```
 
-The installer sets up the commut backend and a Caddy-based entrypoint for your domain.
+Installation creates a stopped, disabled `commut.service`. Linger must be enabled for installation, start, and restart; `--enable-linger` lets commut enable it.
 
-### 3. Set Up the Browser Client
-
-Open `https://your-domain.example.com/app/story.html`.
-
-That page is the browser-side key setup entrypoint. Paste the contents of `authorized.pri.pem`, choose a short passphrase, and save it.
-
-Then open `https://your-domain.example.com/app/index.html` and connect from the main app.
-
-## Local Development Server
-
-From a repository checkout, install frontend dependencies once:
+Generate a site file at a location imported by your Caddy configuration:
 
 ```sh
-nix develop --command -- pnpm --dir frontend install --frozen-lockfile
+commut site install \
+  --target ~/.config/hooddy/sites.d/commut.caddy \
+  --domain commut.example.com
 ```
 
-Then run the local development server:
+The target is any file path you choose; commut has no dependency on the tool managing Caddy. Import the generated file from your main Caddyfile and apply it using your Caddy manager. Global options, certificates, and Caddy reloads are managed externally.
+
+Both installation commands accept `--listen-host` and `--listen-port`, defaulting to `127.0.0.1:3000`. Set matching values on both sides. Sites can be installed and removed independently of systemd. Each site retains its frontend assets through a Nix GC root; reinstalling updates only commut-managed files.
+
+## Browser setup
+
+Open `https://commut.example.com/app/story.html`, paste the private key, choose a short passphrase, and save. Then open `/app/index.html` and connect.
+
+## Operations
 
 ```sh
-nix run .#dev-server
+commut service status
+commut service restart
+commut service stop
+commut service start
+commut service uninstall
+commut site uninstall --target ~/.config/hooddy/sites.d/commut.caddy
 ```
 
-Open `http://127.0.0.1:8080/app/index.html`. Use
-`http://127.0.0.1:8080/app/story.html` for the same browser-side key setup flow.
+`start` enables automatic startup; `stop` disables it. Both are repeatable. `restart` also starts a stopped service and preserves its automatic startup setting. `status` passes through systemd's output and exit code.
 
-The development server builds the frontend assets, starts the backend, and serves
-both through local Caddy. It uses the same authorized public key lookup as the
-installed backend, so keep `~/.config/commut/authorized.pub.pem` in place or set
-`COMMUT_AUTHORIZED_PUBLIC_KEY_PEM_FILE` or `COMMUT_AUTHORIZED_PUBLIC_KEY_PEM`.
+Service removal preserves your public key and sites. Linger remains enabled unless you pass `--disable-linger` to `service uninstall`. Site removal deletes only the managed site file and its asset roots; apply the change through your Caddy manager.
 
-## Notes
+For foreground operation:
 
-- The installer expects an authorized public key file and will fail if it does not exist.
-- Run the installer as the target user, not with sudo.
-- The default public key location used by commut is `~/.config/commut/authorized.pub.pem`.
-- commut sets `COMMUT=1` inside hosted terminal sessions. Check this variable when a shell or editor needs to detect that it is running under commut.
-- If you need installer options, run `nix run github:hooreique/commut#commut-installer -- install --help`.
-- To remove an installation, run `nix run github:hooreique/commut#commut-installer -- uninstall`.
+```sh
+commut serve
+```
+
+This executes `commut-server` directly, preserving signals and exit codes. Configure it with `COMMUT_HOST`, `COMMUT_PORT`, `COMMUT_AUTHORIZED_PUBLIC_KEY_PEM_FILE`, or `COMMUT_AUTHORIZED_PUBLIC_KEY_PEM`. The default key path is `~/.config/commut/authorized.pub.pem`. No service or Caddy files are changed.
+
+The separate Nix packages are `commut-server` and `commut-client`. Run `commut --help` or a subcommand's `--help` for options. Existing installations must be removed before using this CLI; no migration is provided.
+
+commut sets `COMMUT=1` inside hosted terminal sessions.

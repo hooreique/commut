@@ -25,8 +25,6 @@
               (final: prev: { pnpm = prev.pnpm.override { nodejs = final.nodejs_26; }; })
             ];
           };
-          flakeRef = "github:hooreique/commut";
-          installFlakeRef = "${flakeRef}#commut-installer";
           fonts = pkgs.callPackage ./hack-woff2.nix { };
           cp-fonts = pkgs.callPackage ./cp-fonts.nix {
             inherit fonts;
@@ -46,11 +44,10 @@
           client = pkgs.callPackage ./frontend/package.nix {
             inherit fonts;
           };
-          commut = pkgs.callPackage ./backend/package.nix { };
-          installer = pkgs.callPackage ./installer/package.nix {
-            backendPackage = commut;
+          server = pkgs.callPackage ./backend/package.nix { };
+          commut = pkgs.callPackage ./cli/package.nix {
+            backendPackage = server;
             clientPackage = client;
-            installFlakeRef = installFlakeRef;
           };
         in
         {
@@ -58,9 +55,11 @@
             default = commut;
             commut = commut;
             commut-client = client;
-            commut-installer = installer;
+            commut-server = server;
           };
 
+          apps.default.program = "${commut}/bin/commut";
+          apps.commut.program = "${commut}/bin/commut";
           apps.cp-fonts.program = cp-fonts;
           apps.dev-server.program = dev-server;
 
@@ -70,6 +69,7 @@
               pkgs.clippy
               pkgs.rust-analyzer
               pkgs.rustfmt
+              pkgs.python3
               pkgs.woff2
               inputs.uno-ls.packages.${system}.default
             ];
