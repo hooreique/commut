@@ -11,12 +11,6 @@ commut is a personal terminal you host on your server and access through your do
 
 ## Install
 
-Install the CLI into your Nix profile:
-
-```sh
-nix profile add github:hooreique/commut#commut
-```
-
 Generate an authorization key pair:
 
 ```sh
@@ -27,6 +21,47 @@ openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 \
 ```
 
 Keep the private key on the client. Copy only the public key to the server.
+
+### With hooddy 0.2.0
+
+Add the commut input and module to `~/.config/hooddy/flake.nix`. A minimal configuration is:
+
+```nix
+{
+  inputs.hooddy.url = "github:hooreique/hooddy";
+  inputs.commut.url = "github:hooreique/commut";
+
+  outputs = { hooddy, commut, ... }: {
+    hooddyConfigurations.default = hooddy.lib.hooddyConfiguration {
+      system = "x86_64-linux"; # Use aarch64-linux on ARM64.
+      modules = [
+        commut.hooddyModules.default
+        {
+          services.commut.enable = true;
+          services.commut.domain = "commut.example.com";
+        }
+      ];
+    };
+  };
+}
+```
+
+From `~/.config/hooddy`, run `nix flake lock` and `hooddy switch`.
+hooddy installs the Caddy site and starts `hooddy-commut.service` using the public key at
+`~/.config/commut/authorized.pub.pem`. Set `services.commut.port` to change the
+loopback port from 3000. To remove the site and backend, disable the module and switch again.
+
+When migrating a standalone installation, uninstall its managed site and service
+before switching to avoid duplicate routes or port conflicts. For hooddy 0.1 deployments,
+follow [hooddy’s migration guide](https://github.com/hooreique/hooddy/blob/main/CONTRIBUTING.md#moving-from-01).
+
+### With standalone Caddy
+
+Install the CLI into your Nix profile:
+
+```sh
+nix profile add github:hooreique/commut#commut
+```
 
 Install and start the backend as the target user:
 
@@ -43,7 +78,7 @@ Generate a site file at a location imported by your Caddy configuration:
 
 ```sh
 commut site install \
-  --target ~/.config/hooddy/sites.d/commut.caddy \
+  --target ~/.config/caddy/sites.d/commut.caddy \
   --domain commut.example.com
 ```
 
@@ -55,7 +90,7 @@ Both installation commands accept `--listen-host` and `--listen-port`, defaultin
 
 Open `https://commut.example.com/app/story.html`, paste the private key, choose a short passphrase, and save. Then open `/app/index.html` and connect.
 
-## Operations
+## Standalone CLI operations
 
 ```sh
 commut service status
@@ -63,7 +98,7 @@ commut service restart
 commut service stop
 commut service start
 commut service uninstall
-commut site uninstall --target ~/.config/hooddy/sites.d/commut.caddy
+commut site uninstall --target ~/.config/caddy/sites.d/commut.caddy
 ```
 
 `start` enables automatic startup; `stop` disables it. Both are repeatable. `restart` also starts a stopped service and preserves its automatic startup setting. `status` passes through systemd's output and exit code.
